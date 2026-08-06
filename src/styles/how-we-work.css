@@ -46,6 +46,10 @@
 @media (min-width: 1024px) {
   .approach-tiles {
     grid-template-columns: repeat(2, 1fr);
+    /* Column gap must match --grid-col-gap (used by .section-heading above it) — any
+       other value shifts this row's column boundary away from the heading's, even though
+       both are nominally a 50/50 split. Row gap keeps the smaller --space-4 value. */
+    column-gap: var(--grid-col-gap);
   }
 }
 

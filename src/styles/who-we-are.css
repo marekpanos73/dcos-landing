@@ -1,21 +1,34 @@
 .who-we-are {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-10);
   background: var(--gradient-navy);
   padding-block: var(--space-10);
-  padding-inline: var(--space-4);
   text-align: center;
 }
 
 @media (min-width: 1024px) {
   .who-we-are {
-    align-items: flex-start;
     text-align: left;
     padding-block: var(--space-13);
-    padding-inline: var(--container-pad-desktop);
+  }
+}
+
+/* Background stays full-bleed on .who-we-are; content is capped/centered at
+   --container-max here, same box model as .container, so this section's columns line up
+   with every other section's shared grid guide at any viewport width. */
+.who-we-are__inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-10);
+  max-width: var(--container-max);
+  margin-inline: auto;
+  padding-inline: var(--space-4);
+}
+
+@media (min-width: 1024px) {
+  .who-we-are__inner {
+    align-items: flex-start;
     gap: var(--space-12);
+    padding-inline: var(--container-pad-desktop);
   }
 }
 
@@ -32,6 +45,10 @@
 @media (min-width: 1024px) {
   .leader-tiles {
     grid-template-columns: repeat(2, 1fr);
+    /* Column gap must match --grid-col-gap (used by .section-heading above it) — see
+       how-we-work.css for why a mismatched gap shifts this row's column boundary away
+       from the heading's even though both are a 50/50 split. */
+    column-gap: var(--grid-col-gap);
   }
 }
 
@@ -71,7 +88,6 @@
   height: 120px;
   border-radius: 50%;
   object-fit: cover;
-  border: 4px solid rgba(0, 0, 0, 0.3);
 }
 
 @media (min-width: 1024px) {

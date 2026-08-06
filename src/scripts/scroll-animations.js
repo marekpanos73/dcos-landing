@@ -28,6 +28,11 @@ export function initScrollAnimations() {
         duration: 0.7,
         ease: "power3.out",
         stagger: items ? 0.08 : 0,
+        // See hero-animations.js: without this, GSAP can leave these elements (and every
+        // button/link inside them) permanently sitting at the "from" transform after the
+        // reveal finishes, which was the reason hover looked dead on almost every button
+        // on the page — only the header button, never touched by any tween, worked.
+        onComplete: () => gsap.set(targets, { clearProps: "all" }),
         scrollTrigger: {
           trigger: groupEl,
           start: "top 85%",

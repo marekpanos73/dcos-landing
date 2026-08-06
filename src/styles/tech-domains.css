@@ -18,6 +18,10 @@
     padding-inline: var(--container-pad-desktop);
     gap: var(--space-9);
   }
+
+  .tech-domains > .btn {
+    align-self: center;
+  }
 }
 
 .tech-domains__title {

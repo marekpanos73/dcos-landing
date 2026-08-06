@@ -18,10 +18,10 @@
 
 @media (min-width: 1024px) {
   .contact__layout {
-    flex-direction: row;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--grid-col-gap);
     align-items: flex-start;
-    justify-content: space-between;
-    gap: var(--space-10);
   }
 }
 
@@ -29,13 +29,6 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
-}
-
-@media (min-width: 1024px) {
-  .contact__info {
-    flex: 1;
-    max-width: 612px;
-  }
 }
 
 .contact__title {
@@ -95,6 +88,11 @@
 .contact__details a {
   color: var(--color-orange);
   text-decoration: underline;
+  transition: color 0.2s var(--ease-out);
+}
+
+.contact__details a:hover {
+  color: var(--color-grey);
 }
 
 .contact-form {
@@ -180,6 +178,11 @@
 .contact-form__consent a {
   color: var(--color-orange);
   text-decoration: underline;
+  transition: color 0.2s var(--ease-out);
+}
+
+.contact-form__consent a:hover {
+  color: var(--color-grey);
 }
 
 .contact-form__submit {

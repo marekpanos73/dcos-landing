@@ -21,13 +21,36 @@
   transform: scale(0.98);
 }
 
+.btn__label {
+  position: relative;
+  display: inline-block;
+  overflow: hidden;
+  line-height: 1.2;
+}
+
+.btn__label-text {
+  display: block;
+  transition: transform 0.4s var(--ease-out);
+}
+
+.btn__label-text:last-child {
+  position: absolute;
+  top: 100%;
+  left: 0;
+}
+
+.btn:hover .btn__label-text {
+  transform: translateY(-100%);
+}
+
 .btn--primary {
   background: var(--color-orange);
   color: var(--color-white);
 }
 
 .btn--primary:hover {
-  background: color-mix(in srgb, var(--color-orange) 85%, black);
+  background: #f18759; /* fallback for browsers without color-mix() support */
+  background: color-mix(in srgb, var(--color-orange) 65%, white);
 }
 
 .btn--outline {
@@ -51,5 +74,6 @@
 }
 
 .btn--header:hover {
-  background: color-mix(in srgb, var(--color-orange) 85%, black);
+  background: #f18759; /* fallback for browsers without color-mix() support */
+  background: color-mix(in srgb, var(--color-orange) 65%, white);
 }

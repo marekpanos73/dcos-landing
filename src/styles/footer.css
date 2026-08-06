@@ -24,7 +24,7 @@
 @media (min-width: 1024px) {
   .site-footer__columns {
     grid-template-columns: repeat(4, 1fr);
-    gap: var(--space-4);
+    gap: var(--space-9);
   }
 }
 
@@ -32,7 +32,7 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: var(--space-5);
+  gap: var(--space-4);
 }
 
 .site-footer__col p {

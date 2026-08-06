@@ -13,6 +13,10 @@
     text-align: left;
     padding-block: var(--space-13);
   }
+
+  .clients > .btn {
+    align-self: center;
+  }
 }
 
 .reference-tiles {
@@ -39,27 +43,20 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: var(--space-6);
+  gap: var(--space-4);
   text-align: left;
 }
 
 .reference-tile__logo {
   width: 100%;
+  height: 120px;
   background: var(--color-white);
   border-radius: var(--radius-btn);
-  padding-block: var(--space-6);
   display: grid;
   place-items: center;
 }
 
-.reference-tile__name {
-  margin: 0 0 var(--space-3);
-  font-weight: var(--fw-semibold);
-  font-size: 20px;
-  color: var(--color-blue);
-}
-
-.reference-tile p:not(.reference-tile__name) {
+.reference-tile p {
   margin: 0;
   font-weight: var(--fw-light);
   font-size: 18px;

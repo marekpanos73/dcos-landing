@@ -9,6 +9,7 @@ import { initMobileMenu } from "./mobile-menu.js";
 import { animateHero } from "./hero-animations.js";
 import { initContactForm } from "./contact-form.js";
 import { initScrollAnimations } from "./scroll-animations.js";
+import { initButtonLabels } from "./button-labels.js";
 
 initHeaderNav();
 initLinePatterns();
@@ -16,3 +17,4 @@ initMobileMenu();
 animateHero();
 initContactForm();
 initScrollAnimations();
+initButtonLabels();

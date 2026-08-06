@@ -32,16 +32,16 @@
   border-bottom: none;
 }
 
-.value-tile__number {
+.value-tile .value-tile__number {
+  width: fit-content;
   margin: 0 0 var(--space-4);
   font-family: var(--font-display);
   font-weight: 400;
   font-size: 56px;
-  color: var(--color-blue);
-  opacity: 0.4;
+  color: color-mix(in srgb, var(--color-blue) 40%, transparent);
 }
 
-.value-tile__number::after {
+.value-tile .value-tile__number::after {
   content: "";
   display: block;
   width: 100%;
@@ -97,6 +97,10 @@
 
   .value-tile:nth-child(n + 4) {
     border-top: 1px solid rgba(35, 35, 35, 0.15);
+  }
+
+  .value-tile--image {
+    padding: 0;
   }
 
   .value-tile__title {

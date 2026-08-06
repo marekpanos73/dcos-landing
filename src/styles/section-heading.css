@@ -65,18 +65,17 @@
   }
 
   .section-heading {
-    flex-direction: row;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--grid-col-gap);
     align-items: flex-start;
-    gap: var(--space-9);
   }
 
   .section-heading__title {
     font-size: 56px;
-    flex: 1;
   }
 
   .section-heading__body {
-    flex: 1;
     align-items: flex-start;
     padding-top: var(--space-2);
   }
