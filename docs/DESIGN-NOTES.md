@@ -3,6 +3,52 @@
 Rationale for decisions that deliberately deviate from a literal 1:1 Figma reproduction.
 Read this before implementing a section that touches one of these areas.
 
+## Gotcha: GSAP tweens can leave elements permanently offset, killing :hover
+
+`gsap.from(el, {y: N, ...})` — even a single, un-staggered, non-timeline call — can finish
+with `progress() === 1` while the element's inline `transform` is still stuck at (or near)
+the "from" pose instead of resolving back to the resting value. Reproduced with a plain
+`gsap.from()` on a real page element (no ScrollTrigger, no timeline, no stagger needed);
+GSAP caches per-element transform state on the DOM node itself, and once that cache is off,
+it can re-poison the *next* tween on the same element too — clearing the inline `style`
+attribute by hand doesn't fix it, since the stale value lives in GSAP's cache, not the DOM.
+
+Symptom on this site: [hero-animations.js](../src/scripts/hero-animations.js)'s entrance
+timeline and [scroll-animations.js](../src/scripts/scroll-animations.js)'s ScrollTrigger
+reveals left every button and link they animated (i.e. almost every interactive element on
+the page) sitting ~16–32px off from its intended position — invisible at a glance since the
+offset is small, but it meant `:hover` looked completely dead on every button *except* the
+one in the header, which is the only one no GSAP tween ever touches.
+
+**Fix — always clean up after a tween/timeline that touches anything interactive:**
+`onComplete: () => gsap.set(targets, { clearProps: "all" })`. Both files above do this now.
+Do the same for any new entrance/reveal animation added later, especially anything that
+wraps a button, link, or other element a user will actually interact with.
+
+## Two-column content rows share one grid — and one gap
+
+Every two-column row on the page (`.section-heading`, `.career__content`,
+`.contact__layout`, and the 2-col tile grids directly beneath a heading —
+`.approach-tiles`, `.leader-tiles`) uses `grid-template-columns: 1fr 1fr` with
+`gap`/`column-gap: var(--grid-col-gap)` ([tokens.css](../src/styles/tokens.css)), so the
+right column's width and x-position match everywhere at any viewport width.
+
+Two traps that both look "correct" individually but break this:
+
+- **A fixed-px first column instead of `1fr 1fr`.** It only lines up with a true 50/50
+  split by coincidence, at whatever one viewport width you measured it at — tried once,
+  looked right at 1728px, drifted at every other width. Always use equal `1fr` tracks.
+- **A grid that's genuinely 50/50 but uses a different `gap`.** The tile grids sit right
+  below a `.section-heading` in the same section and are *also* an honest 50/50 split, but
+  with the smaller `--space-4` gap for their row-gap — using that same value for
+  column-gap shifts their column boundary away from the heading's above it (gap size
+  changes where the 50% line effectively falls once you account for it). Row-gap and
+  column-gap can differ; column-gap must always be `--grid-col-gap` wherever a row needs
+  to align with the rest of the page.
+
+If a future row needs to join this shared grid, use the same two rules — don't invent a
+new width or gap value that merely "looks aligned" at the width you happen to be testing.
+
 ## Gotcha: forced dark mode repainting the page
 
 `body` must have an explicit `background`, and `:root` must declare `color-scheme: light`
