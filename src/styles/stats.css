@@ -1,0 +1,63 @@
+.stats {
+  /* Semi-transparent + blurred, not solid — the hero's orange ring is designed to bleed
+     up into this section (see .hero__ring's negative bottom offset) and show through
+     here, frosted, per Figma's backdrop-blur + white "Lighten" overlay treatment. */
+  position: relative;
+  background: rgba(246, 246, 246, 0.75);
+  backdrop-filter: blur(80px);
+  -webkit-backdrop-filter: blur(80px);
+  padding-block: var(--space-10);
+  padding-inline: var(--space-6);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-9);
+}
+
+@media (min-width: 1024px) {
+  .stats {
+    padding-inline: var(--container-pad-desktop);
+  }
+}
+
+.stats__caption {
+  margin: 0;
+  font-weight: var(--fw-semibold);
+  font-size: 24px;
+  text-align: center;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--color-blue);
+  opacity: 0.4;
+}
+
+.stats__logos {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-6);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+}
+
+.stats__logos img {
+  width: auto;
+  filter: grayscale(1);
+  opacity: 0.6;
+  transition: opacity 0.2s var(--ease-out);
+}
+
+.stats__logos img:hover {
+  opacity: 1;
+}
+
+@media (min-width: 1024px) {
+  .stats__logos {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--space-9) var(--space-11);
+  }
+}

@@ -1,0 +1,458 @@
+<!doctype html>
+<html lang="cs">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>dCOS — Shaping the future together.</title>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Přeskočit na obsah</a>
+
+    <header class="site-header" data-header>
+      <div class="site-header__inner">
+        <a href="#hero" class="site-header__logo" aria-label="dCOS — domů">
+          <img src="src/assets/icons/dcos-logo.svg" alt="dCOS" width="93" height="24" />
+        </a>
+
+        <div class="site-header__nav-group">
+          <nav class="site-nav" aria-label="Hlavní navigace">
+            <ul class="site-nav__list">
+              <li><a href="#reseni">Řešení</a></li>
+              <li><a href="#jak-pracujeme">Jak pracujeme</a></li>
+              <li><a href="#kdo-jsme">Kdo jsme</a></li>
+              <li><a href="#reference">Reference</a></li>
+              <li><a href="#kariera">Kariéra</a></li>
+              <li><a href="#">Blog</a></li>
+            </ul>
+          </nav>
+
+          <a href="#kontakt" class="btn btn--header">Kontakt</a>
+        </div>
+
+        <button
+          type="button"
+          class="menu-toggle"
+          data-menu-toggle
+          aria-expanded="false"
+          aria-controls="mobile-menu"
+        >
+          <span class="sr-only">Otevřít menu</span>
+          <img class="menu-toggle__icon menu-toggle__icon--open" src="src/assets/icons/menu-open.svg" alt="" aria-hidden="true" />
+          <img class="menu-toggle__icon menu-toggle__icon--close" src="src/assets/icons/menu-close.svg" alt="" aria-hidden="true" />
+        </button>
+      </div>
+    </header>
+
+    <div class="mobile-menu" id="mobile-menu" data-mobile-menu data-line-pattern="0.6" hidden>
+      <nav class="mobile-menu__nav" aria-label="Mobilní navigace">
+        <a href="#reseni">Řešení</a>
+        <a href="#jak-pracujeme">Jak pracujeme</a>
+        <a href="#kdo-jsme">Kdo jsme</a>
+        <a href="#reference">Reference</a>
+        <a href="#kariera">Kariéra</a>
+        <a href="#">Blog</a>
+      </nav>
+      <a href="#kontakt" class="btn btn--primary mobile-menu__cta">Kontakt</a>
+    </div>
+
+    <main id="main">
+      <section class="hero bg-navy--glow" id="hero" data-line-pattern="1">
+        <div class="hero__decor" aria-hidden="true">
+          <div class="hero__ring"></div>
+          <div class="hero__badge">
+            <img class="hero__badge-cross" src="src/assets/icons/badge-cross.svg" alt="" />
+            <p class="hero__badge-label">Slavíme</p>
+            <p class="hero__badge-years">20 let</p>
+          </div>
+        </div>
+
+        <div class="hero__content">
+          <p class="hero__brand">
+            <span class="hero__brand-line">Shaping the future</span>
+            <span class="hero__brand-line hero__brand-line--big">together<span class="hero__brand-dot">.</span></span>
+          </p>
+          <p class="hero__tagline">Pomáháme firmám zrychlit a zjednodušit jejich digitální svět.</p>
+          <p class="hero__lede">
+            Automatizujeme procesy, propojujeme systémy a zpřístupňujeme data tak, aby organizace fungovaly
+            efektivněji, rychleji reagovaly na změny a byly připravené na dlouhodobý růst.
+          </p>
+          <p class="hero__lede">
+            Od roku 2006 budujeme technologie, které mají skutečný dopad na fungování firem. Dnes jsme partnerem
+            středních a velkých organizací v Česku i Evropě.
+          </p>
+          <div class="hero__actions">
+            <a href="#kontakt" class="btn btn--primary">Domluvit konzultaci</a>
+            <a href="#jak-pracujeme" class="btn btn--outline">Jak pracujeme</a>
+          </div>
+        </div>
+      </section>
+
+      <section class="stats" id="duveryhodnost">
+        <p class="stats__caption">Důvěřují nám společnosti jako</p>
+        <ul class="stats__logos">
+          <li><img src="src/assets/icons/logos/csob.svg" alt="ČSOB" height="48" /></li>
+          <li><img src="src/assets/icons/logos/vodafone.svg" alt="Vodafone" height="40" /></li>
+          <li><img src="src/assets/icons/logos/ibm.svg" alt="IBM" height="32" /></li>
+          <li><img src="src/assets/icons/logos/skoda.svg" alt="Škoda" height="48" /></li>
+          <li><img src="src/assets/icons/logos/allianz.svg" alt="Allianz" height="32" /></li>
+          <li><img src="src/assets/icons/logos/kooperativa.svg" alt="Kooperativa" height="64" /></li>
+          <li><img src="src/assets/icons/logos/raiffeisen.svg" alt="Raiffeisen" height="40" /></li>
+          <li><img src="src/assets/icons/logos/dhl.svg" alt="DHL" height="40" /></li>
+          <li><img src="src/assets/icons/logos/air-bank.svg" alt="Air Bank" height="40" /></li>
+          <li><img src="src/assets/icons/logos/cez.svg" alt="ČEZ" height="48" /></li>
+        </ul>
+      </section>
+
+      <section class="what-we-do container" id="reseni">
+        <div class="section-top">
+          <p class="eyebrow">Řešení</p>
+          <div class="section-heading">
+            <h2 class="section-heading__title">Technologie mají podporovat růst. Ne ho brzdit.</h2>
+            <div class="section-heading__body">
+              <p>
+                Propojujeme systémy, automatizujeme procesy a zpřístupňujeme data tak, aby firmy mohly růst bez
+                zbytečné složitosti.
+              </p>
+              <a href="#kontakt" class="btn btn--primary">Domluvit konzultaci</a>
+            </div>
+          </div>
+        </div>
+
+        <ul class="value-tiles">
+          <li class="value-tile">
+            <p class="value-tile__number">01</p>
+            <h3 class="value-tile__title">Scalability &amp; Sustainability</h3>
+            <p>Navrhujeme technologie, které podporují rozvoj</p>
+            <p>Systémy a procesy stojí na řešení, která fungují spolehlivě a dlouhodobě</p>
+          </li>
+          <li class="value-tile">
+            <p class="value-tile__number">02</p>
+            <h3 class="value-tile__title">Operational &amp; Business Excellence</h3>
+            <p>Automatizujeme to, co podpoří růst.</p>
+            <p>Méně rutiny a chyb podpoří rychlejší rozhodování v běžném provozu i byznysu.</p>
+          </li>
+          <li class="value-tile">
+            <p class="value-tile__number">03</p>
+            <h3 class="value-tile__title">Data &amp; Insights</h3>
+            <p>Vytváříme jeden zdroj pravdy.</p>
+            <p>Data slouží k rozhodování o budoucnosti, nejen k vysvětlování minulosti</p>
+          </li>
+          <li class="value-tile">
+            <p class="value-tile__number">04</p>
+            <h3 class="value-tile__title">Risk Management &amp; Financial Health</h3>
+            <p>Zmírňujeme provozní i technologická rizika.</p>
+            <p>Kontrola nákladů, transparentnost a finanční jistota je základem pro řízení firmy.</p>
+          </li>
+          <li class="value-tile">
+            <p class="value-tile__number">05</p>
+            <h3 class="value-tile__title">People, Culture &amp; Innovation Capability</h3>
+            <p>Podporujeme prostředí pro rozvoj a inovace.</p>
+            <p>Technologie a inovace podporují kulturu a spolupráci napříč celou organizací.</p>
+          </li>
+          <li class="value-tile value-tile--image">
+            <img src="src/assets/images/what-we-do.webp" alt="Tým dCOS při práci" loading="lazy" />
+          </li>
+        </ul>
+      </section>
+
+      <section class="tech-domains bg-navy--glow" id="technologie">
+        <h2 class="tech-domains__title">Naše technologické domény</h2>
+        <ul class="area-tiles">
+          <li class="area-tile">
+            <h3>Business Process Automation</h3>
+            <span class="area-tile__decor"></span>
+            <p>Automatizujeme firemní procesy tak, aby se šetřil čas, náklady a energie lidí.</p>
+          </li>
+          <li class="area-tile">
+            <h3>Enterprise App Integration</h3>
+            <span class="area-tile__decor"></span>
+            <p>Propojujeme firemní systémy do jednoho spolehlivého celku bez omezení</p>
+          </li>
+          <li class="area-tile">
+            <h3>Data Integration</h3>
+            <span class="area-tile__decor"></span>
+            <p>Slučujeme data z různých zdrojů, aby byla dostupná pro okamžitá rozhodování</p>
+          </li>
+          <li class="area-tile">
+            <h3>AI &amp; Data Mining</h3>
+            <span class="area-tile__decor"></span>
+            <p>Využíváme AI a datovou analytiku pro predikce, optimalizace a zvýšení efektivity</p>
+          </li>
+        </ul>
+        <a href="#reseni" class="btn btn--primary">Zjistit více</a>
+      </section>
+
+      <section class="how-we-work container" id="jak-pracujeme">
+        <div class="section-top">
+          <p class="eyebrow">Jak pracujeme</p>
+          <div class="section-heading">
+            <h2 class="section-heading__title">Partnersky a s odpovědností.</h2>
+            <div class="section-heading__body">
+              <p>
+                Nejdříve potřebujeme porozumět fungování organizace, jejím cílům a výzvám. Teprve poté navrhujeme
+                řešení.
+              </p>
+              <a href="#kontakt" class="btn btn--primary how-we-work__cta how-we-work__cta--mobile"
+                >Domluvit konzultaci</a
+              >
+            </div>
+          </div>
+        </div>
+
+        <div class="how-we-work__tiles-wrap">
+          <ul class="approach-tiles">
+            <li class="approach-tile">
+              <h3>Dialog je základ</h3>
+              <span class="approach-tile__decor"></span>
+              <p>Ptáme se, nasloucháme a hledáme skutečnou podstatu problému</p>
+            </li>
+            <li class="approach-tile">
+              <h3>Cesta vpřed</h3>
+              <span class="approach-tile__decor"></span>
+              <p>Zpochybňujeme zažité předpoklady a hledáme řešení, která fungují dlouhodobě</p>
+            </li>
+            <li class="approach-tile">
+              <h3>Otevřenost nade vše</h3>
+              <span class="approach-tile__decor"></span>
+              <p>Ve vztahu s klienty a partnery věříme v transparentní komunikaci a spolupráci.</p>
+            </li>
+            <li class="approach-tile">
+              <h3>Spolehlivost vždy a všude</h3>
+              <span class="approach-tile__decor"></span>
+              <p>Budujeme řešení a partnerství, na která se lze dlouhodobě spolehnout.</p>
+            </li>
+          </ul>
+          <a href="#kontakt" class="btn btn--primary how-we-work__cta how-we-work__cta--desktop"
+            >Domluvit konzultaci</a
+          >
+        </div>
+      </section>
+
+      <section class="who-we-are bg-navy--glow" id="kdo-jsme" data-line-pattern="0.7">
+        <div class="section-top">
+          <p class="eyebrow eyebrow--on-dark">Kdo jsme</p>
+          <div class="section-heading">
+            <h2 class="section-heading__title section-heading__title--on-dark">
+              Přes 20 let zkušeností. Stabilní růst. Reálná odpovědnost.
+            </h2>
+            <div class="section-heading__body section-heading__body--on-dark">
+              <p>DCOS vznikl v roce 2006 s cílem budovat technologická řešení, která mají skutečný dopad na fungování firem.</p>
+              <p>
+                Dnes jsme technologickou a konzultační společností se silným know-how v oblasti enterprise systémů,
+                automatizace, integrace a datově řízených architektur.
+              </p>
+              <p>Rosteme s rozmyslem. Reputace a kvalita jsou pro nás důležitější než objem zakázek.</p>
+            </div>
+          </div>
+        </div>
+
+        <ul class="leader-tiles">
+          <li class="leader-tile">
+            <a class="leader-tile__ln" href="#" aria-label="Tibor Lopušan na LinkedIn" target="_blank" rel="noopener">
+              <img src="src/assets/icons/linkedin.svg" alt="" width="17" height="17" />
+            </a>
+            <img class="leader-tile__photo" src="src/assets/images/tibor-lopusan.webp" alt="Tibor Lopušan" loading="lazy" />
+            <div class="leader-tile__header">
+              <p class="leader-tile__name">Tibor Lopušan</p>
+              <p class="leader-tile__role">CEO</p>
+            </div>
+            <span class="leader-tile__decor"></span>
+            <p>
+              Tibor je zakladatelem společnosti DCOS a stojí za jejím dlouhodobým strategickým směřováním. Má za
+              sebou rozsáhlou kariéru v oblasti IT a telekomunikací, včetně působení ve společnosti Oskar (později
+              Vodafone), kde se podílel na návrhu a realizaci technologicky náročných projektů.
+            </p>
+            <p>
+              Dlouhodobá spolupráce s IBM vedla k založení DCOS a navázání oficiálního partnerství. Tibor je také
+              spoluzakladatelem projektu greppix. Ve své práci prosazuje technologie, které mají skutečný přínos pro
+              byznys a obstojí v dlouhodobém horizontu.
+            </p>
+          </li>
+          <li class="leader-tile">
+            <a class="leader-tile__ln" href="#" aria-label="Zdeněk Šubr na LinkedIn" target="_blank" rel="noopener">
+              <img src="src/assets/icons/linkedin.svg" alt="" width="17" height="17" />
+            </a>
+            <img class="leader-tile__photo" src="src/assets/images/zdenek-subr.webp" alt="Zdeněk Šubr" loading="lazy" />
+            <div class="leader-tile__header">
+              <p class="leader-tile__name">Zdeněk Šubr</p>
+              <p class="leader-tile__role">Prokurista, Head of Delivery &amp; Sales</p>
+            </div>
+            <span class="leader-tile__decor"></span>
+            <p>
+              Zdeněk se podílí na strategickém řízení společnosti, obchodním rozvoji i vedení komplexních
+              technologických projektů. Specializuje se na automatizaci procesů, systémovou integraci a návrh řešení
+              pro prostředí středních a velkých organizací.
+            </p>
+            <p>
+              Během své kariéry vedl nebo spoluvytvářel projekty pro klienty jako ČSOB, ŠKODA AUTO nebo Vodafone, a
+              to napříč aktivitami DCOS i IBM. Dlouhodobě propojuje obchodní potřeby klientů s úspěšnou realizací
+              řešení, která přinášejí měřitelnou hodnotu a dlouhodobou udržitelnost.
+            </p>
+          </li>
+        </ul>
+      </section>
+
+      <section class="clients container" id="reference">
+        <p class="eyebrow">Reference</p>
+        <ul class="reference-tiles">
+          <li class="reference-tile">
+            <div class="reference-tile__logo"><img src="src/assets/icons/logos/csob.svg" alt="" height="48" /></div>
+            <p class="reference-tile__name">ČSOB</p>
+            <p>Digitalizace a automatizace procesů v enterprise prostředí napříč více než 100 týmy.</p>
+          </li>
+          <li class="reference-tile">
+            <div class="reference-tile__logo"><img src="src/assets/icons/logos/vodafone.svg" alt="" height="40" /></div>
+            <p class="reference-tile__name">Vodafone</p>
+            <p>Automatizace order managementu a orchestrace komplexních služeb.</p>
+          </li>
+          <li class="reference-tile">
+            <div class="reference-tile__logo"><img src="src/assets/icons/logos/ibm.svg" alt="" height="32" /></div>
+            <p class="reference-tile__name">IBM</p>
+            <p>Dlouhodobé partnerství při dodávce enterprise řešení a transformačních projektů.</p>
+          </li>
+          <li class="reference-tile">
+            <div class="reference-tile__logo"><img src="src/assets/icons/logos/skoda.svg" alt="" height="48" /></div>
+            <p class="reference-tile__name">ŠKODA AUTO</p>
+            <p>Komplexní integrační a procesní řešení pro náročné provozní prostředí.</p>
+          </li>
+        </ul>
+        <a href="#kontakt" class="btn btn--primary">Zjistit více</a>
+      </section>
+
+      <section class="career bg-navy--glow" id="kariera">
+        <p class="eyebrow eyebrow--on-dark">Kariéra</p>
+        <div class="career__content">
+          <div class="career__text">
+            <h2 class="career__title">Hledáme lidi, kteří chtějí dělat technologie poctivě a s rozmyslem</h2>
+            <p>
+              V DCOS pracujete na projektech, které mají skutečný dopad. V týmech, kde se můžete opřít o zkušenosti
+              ostatních a dlouhodobě růst – odborně i lidsky. Staňte se součástí týmu, který roste udržitelně a s
+              respektem ke kvalitě.
+            </p>
+            <a href="#" class="btn btn--primary">Volné pozice</a>
+            <p class="career__contact">
+              Nenalezli jste pozici, která by odpovídala vašemu zaměření? Ozvěte se nám na
+              <a href="mailto:career@dcos.cz">career@dcos.cz</a>
+            </p>
+          </div>
+          <div class="career__gallery">
+            <img class="career__gallery-main" src="src/assets/images/career-main.webp" alt="Tým dCOS při práci" loading="lazy" />
+            <img class="career__gallery-accent" src="src/assets/images/career-accent.webp" alt="" loading="lazy" />
+          </div>
+        </div>
+      </section>
+
+      <section class="blog-teaser container" id="blog">
+        <div class="section-top">
+          <p class="eyebrow">Blog</p>
+          <div class="section-heading">
+            <h2 class="section-heading__title">Prakticky, věcně a bez zbytečného hluku</h2>
+            <div class="section-heading__body">
+              <p>Sdílíme zkušenosti z projektů, odborné pohledy i novinky z DCOS.</p>
+              <a href="#" class="btn btn--primary">Přejít na blog</a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="contact container" id="kontakt">
+        <div class="section-top">
+          <p class="eyebrow">Kontakt</p>
+          <div class="contact__layout">
+            <div class="contact__info">
+              <h2 class="contact__title">Chcete mít technologie pod kontrolou a vedle sebe tým, na který se můžete spolehnout?</h2>
+              <p class="contact__lede">Ozvěte se nám. Rádi si poslechneme vaše potřeby a navrhneme další krok</p>
+              <dl class="contact__details">
+                <div>
+                  <dt>E-mail</dt>
+                  <dd><a href="mailto:info@dcos.cz">info@dcos.cz</a></dd>
+                </div>
+                <div>
+                  <dt>Kariéra</dt>
+                  <dd><a href="mailto:info@dcos.cz">info@dcos.cz</a></dd>
+                </div>
+                <div>
+                  <dt>Sídlo</dt>
+                  <dd>Lomnického 1705/5,<br />Prague Nusle, 140 00<br />Czechia</dd>
+                </div>
+              </dl>
+            </div>
+
+            <form class="contact-form" id="contact-form">
+              <div class="contact-form__field">
+                <label for="cf-name">Jméno a příjmení <span class="contact-form__required">*</span></label>
+                <input type="text" id="cf-name" name="name" required autocomplete="name" />
+              </div>
+              <div class="contact-form__field">
+                <label for="cf-email">Firemní e-mail <span class="contact-form__required">*</span></label>
+                <input type="email" id="cf-email" name="email" required autocomplete="email" />
+              </div>
+              <div class="contact-form__field">
+                <label for="cf-message">Zpráva <span class="contact-form__required">*</span></label>
+                <textarea id="cf-message" name="message" rows="5" required></textarea>
+              </div>
+              <label class="contact-form__consent">
+                <input type="checkbox" name="consent" required />
+                <span
+                  >Odesláním souhlasíte se <a href="#">zpracováním osobních údajů</a> pro účely vyřízení vaší
+                  poptávky.</span
+                >
+              </label>
+              <button type="submit" class="btn btn--primary contact-form__submit">Kontaktovat dCOS</button>
+            </form>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer bg-navy--glow" data-line-pattern="0.5">
+      <div class="site-footer__columns">
+        <div class="site-footer__col">
+          <img src="src/assets/icons/dcos-logo-footer.svg" alt="dCOS" width="125" height="32" />
+          <p>Shaping the future together.</p>
+          <div class="lang-switch" role="group" aria-label="Jazyk">
+            <button type="button" class="lang-switch__btn is-active" aria-pressed="true">CZ</button>
+            <button type="button" class="lang-switch__btn" aria-pressed="false" disabled>EN</button>
+          </div>
+        </div>
+
+        <div class="site-footer__col">
+          <p class="site-footer__heading">Společnost dCOS</p>
+          <nav class="site-footer__links">
+            <a href="#reseni">Řešení</a>
+            <a href="#jak-pracujeme">Jak pracujeme</a>
+            <a href="#kdo-jsme">Kdo jsme</a>
+            <a href="#reference">Reference</a>
+          </nav>
+        </div>
+
+        <div class="site-footer__col">
+          <p class="site-footer__heading">Rychlé odkazy</p>
+          <nav class="site-footer__links">
+            <a href="#kariera">Kariéra</a>
+            <a href="#blog">Blog</a>
+            <a href="#kontakt">Kontakt</a>
+          </nav>
+        </div>
+
+        <div class="site-footer__col">
+          <p class="site-footer__heading">Právní informace</p>
+          <nav class="site-footer__links">
+            <a href="#">Ochrana osobních údajů</a>
+            <a href="#">Whistleblowing</a>
+            <a href="#">Cookies</a>
+          </nav>
+        </div>
+      </div>
+
+      <div class="site-footer__bottom">
+        <p>© 2026 DCOS s.r.o.</p>
+        <a class="site-footer__ln" href="#" aria-label="dCOS na LinkedIn" target="_blank" rel="noopener">
+          <img src="src/assets/icons/linkedin.svg" alt="" width="14" height="14" />
+        </a>
+      </div>
+    </footer>
+
+    <script type="module" src="/src/scripts/main.js"></script>
+  </body>
+</html>

@@ -1,0 +1,9 @@
+.blog-teaser {
+  padding-block: var(--space-10);
+}
+
+@media (min-width: 1024px) {
+  .blog-teaser {
+    padding-block: var(--space-13) var(--space-10);
+  }
+}

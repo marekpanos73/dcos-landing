@@ -1,0 +1,88 @@
+.how-we-work {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-10);
+  padding-block: var(--space-10);
+}
+
+@media (min-width: 1024px) {
+  .how-we-work {
+    gap: var(--space-12);
+    padding-block: var(--space-13);
+  }
+}
+
+.how-we-work__tiles-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-8);
+}
+
+.how-we-work__cta--desktop {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .how-we-work__cta--mobile {
+    display: none;
+  }
+
+  .how-we-work__cta--desktop {
+    display: inline-flex;
+  }
+}
+
+.approach-tiles {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-4);
+  width: 100%;
+}
+
+@media (min-width: 1024px) {
+  .approach-tiles {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.approach-tile {
+  background: #f6f6f6;
+  border: 1px solid rgba(35, 35, 35, 0.1);
+  border-radius: 16px;
+  padding: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.approach-tile h3 {
+  margin: 0;
+  font-weight: var(--fw-semibold);
+  font-size: 28px;
+  color: var(--color-blue);
+}
+
+@media (min-width: 1024px) {
+  .approach-tile h3 {
+    font-size: 32px;
+  }
+}
+
+.approach-tile__decor {
+  display: block;
+  width: 40px;
+  height: 4px;
+  background: var(--color-orange);
+}
+
+.approach-tile p {
+  margin: 0;
+  font-weight: var(--fw-light);
+  font-size: 20px;
+  line-height: 1.35;
+  color: var(--color-grey);
+}

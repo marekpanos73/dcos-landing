@@ -1,0 +1,119 @@
+/* Desktop nav needs more room than the general 1024px content breakpoint — logo +
+   6 nav links + Kontakt button don't reliably fit until ~1280px. Keep this in sync with
+   NAV_BREAKPOINT in src/scripts/header-nav.js, which also force-switches to the mobile
+   menu below this width if the nav content still doesn't fit (e.g. unusual zoom/fonts). */
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: var(--color-white);
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.15);
+}
+
+.site-header__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: var(--header-height-mobile);
+  padding-inline: var(--space-4);
+}
+
+@media (min-width: 1280px) {
+  .site-header__inner {
+    height: var(--header-height-desktop);
+    padding-inline: var(--container-pad-desktop);
+  }
+}
+
+.site-header__logo {
+  display: block;
+  width: 70px;
+  flex-shrink: 0;
+}
+
+.site-header__logo img {
+  width: 100%;
+  height: auto;
+}
+
+@media (min-width: 1280px) {
+  .site-header__logo {
+    width: 93px;
+  }
+}
+
+.site-header__nav-group {
+  display: none;
+}
+
+@media (min-width: 1280px) {
+  .site-header__nav-group {
+    display: flex;
+    align-items: center;
+    gap: var(--space-6);
+  }
+}
+
+/* Safety net: if header-nav.js measures an overflow (narrow "desktop" window, unusual
+   zoom, a font metric wider than expected), it adds this to <body> to force the mobile
+   menu even though the viewport is above the 1280px breakpoint. */
+body.nav-overflow .site-header__nav-group {
+  display: none;
+}
+
+body.nav-overflow .menu-toggle {
+  display: grid;
+}
+
+.site-nav__list {
+  display: flex;
+  gap: var(--space-6);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-weight: var(--fw-semibold);
+  font-size: 18px;
+}
+
+.site-nav__list a {
+  white-space: nowrap;
+  transition: color 0.2s var(--ease-out);
+}
+
+.site-nav__list a:hover {
+  color: var(--color-orange);
+}
+
+.menu-toggle {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.menu-toggle__icon {
+  grid-area: 1 / 1;
+}
+
+.menu-toggle__icon--close {
+  display: none;
+}
+
+.menu-toggle[aria-expanded="true"] .menu-toggle__icon--open {
+  display: none;
+}
+
+.menu-toggle[aria-expanded="true"] .menu-toggle__icon--close {
+  display: block;
+}
+
+@media (min-width: 1280px) {
+  .menu-toggle {
+    display: none;
+  }
+}

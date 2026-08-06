@@ -1,0 +1,191 @@
+.hero {
+  position: relative;
+  /* Not clipped: the ring (.hero__ring) is designed to bleed past the hero's own bottom
+     edge into the Stats section below, per Figma. Horizontal overflow is still caught by
+     body's overflow-x:hidden. */
+  overflow: visible;
+  background: var(--gradient-navy);
+  padding-block: var(--space-11) var(--space-13);
+  /* No padding-inline here on purpose — see .hero__content's margin-inline-start below.
+     cqw units (used by .hero__ring / .hero__badge further down) are a percentage of the
+     query container's *content box*, i.e. after its own padding is subtracted. Since the
+     ring/badge percentages are computed against Figma's full 1728px hero width, padding
+     here would shrink that content box and make cqw resolve smaller than intended — the
+     ring rendered visibly undersized before this was split out. */
+  container-type: inline-size;
+}
+
+@media (min-width: 1024px) {
+  .hero {
+    padding-block: var(--space-13);
+  }
+}
+
+.hero__content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-5);
+  max-width: 612px;
+  /* margin, not padding — keeps max-width as the actual text column width (matching
+     Figma's w-[612px] on the text itself) and, more importantly, doesn't touch .hero's
+     content box that .hero__ring / .hero__badge size themselves against (see .hero).
+     Both sides: on mobile there's no max-width headroom to rely on for a right inset
+     (612px is wider than the viewport), so it needs its own margin same as the left. */
+  margin-inline: var(--space-4);
+  color: var(--color-white);
+}
+
+@media (min-width: 1024px) {
+  .hero__content {
+    margin-inline: var(--container-pad-desktop);
+  }
+}
+
+.hero__brand {
+  display: flex;
+  flex-direction: column;
+  margin: 0 0 var(--space-3);
+}
+
+.hero__brand-line {
+  font-weight: var(--fw-light);
+  font-size: 32px;
+  line-height: 1.35;
+}
+
+.hero__brand-line--big {
+  font-weight: var(--fw-semibold);
+  font-size: 72px;
+  line-height: 1.1;
+}
+
+.hero__brand-dot {
+  color: var(--color-orange);
+}
+
+@media (min-width: 1024px) {
+  .hero__brand-line {
+    font-size: 56px;
+  }
+
+  .hero__brand-line--big {
+    font-size: 128px;
+  }
+}
+
+.hero__tagline {
+  margin: 0;
+  font-weight: var(--fw-semibold);
+  font-size: 28px;
+  line-height: 1.35;
+}
+
+.hero__lede {
+  margin: 0;
+  font-weight: var(--fw-light);
+  font-size: 20px;
+  line-height: 1.35;
+}
+
+@media (min-width: 1024px) {
+  .hero__lede {
+    font-size: 24px;
+  }
+}
+
+.hero__actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  width: 100%;
+  margin-top: var(--space-4);
+}
+
+@media (min-width: 1024px) {
+  .hero__actions {
+    flex-direction: row;
+    width: auto;
+  }
+}
+
+.hero__decor {
+  display: none;
+}
+
+/* The generic [data-line-pattern] > * rule (line-pattern.css) sets position:relative on
+   every direct child of .hero, including this one, so it can stack above the canvas.
+   That turns .hero__decor itself into the containing block for .hero__ring/.hero__badge
+   below, instead of .hero — pushing both out of position. Overriding to position:absolute
+   + inset:0 makes .hero__decor span .hero's box exactly, so their right/bottom offsets
+   resolve the same as if they were positioned directly against .hero. The extra
+   [data-line-pattern] in this selector isn't decorative — it's needed to outweigh that
+   rule's specificity so this override reliably wins regardless of CSS import order. */
+.hero[data-line-pattern] > .hero__decor {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* Shown from 1024px — matches the general content breakpoint. Below the 1280px this used
+   to require, the ring/badge are still visible, just scaled down (see cqw values below);
+   testing showed the scaled-down size clears the text column and buttons fine even at
+   1024px, so a hard cutoff isn't needed as long as the scaling is right. */
+@media (min-width: 1024px) {
+  .hero__decor {
+    display: block;
+  }
+
+  /* Every offset below (ring width/right/bottom, badge width/right/bottom) is the exact
+     same fraction of 1728px (the Figma reference hero width) expressed as cqw — e.g. ring
+     width 943.092/1728 = 54.58cqw, badge bottom 266.203/1728 = 15.41cqw. Using ONE
+     consistent basis for all six numbers, including the vertical ones, is what keeps the
+     ring and the "Slavíme 20 let" + cross locked in the exact relative position Figma
+     defines at every hero width — mixing scaled (cqw) and fixed-px values here previously
+     let them drift apart as the hero's width changed. There's deliberately no min()/max()
+     ceiling: the graphic keeps scaling up past 1728px rather than freezing there, so it
+     doesn't start looking undersized on wide screens. */
+  .hero__ring {
+    position: absolute;
+    right: -13.7cqw;
+    bottom: -6.13cqw;
+    width: 54.58cqw;
+    aspect-ratio: 943 / 947;
+    background: url("./../assets/icons/badge-ring.svg") no-repeat center / contain;
+  }
+
+  .hero__badge {
+    position: absolute;
+    right: 8.04cqw;
+    bottom: 15.41cqw;
+    width: 20.72cqw;
+    aspect-ratio: 358 / 355.6;
+    display: grid;
+    align-content: center;
+    justify-items: center;
+    text-align: center;
+    color: var(--color-white);
+  }
+
+  .hero__badge-cross {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  .hero__badge-label {
+    position: relative;
+    margin: 0;
+    font-weight: var(--fw-semibold);
+    font-size: 2.78cqw;
+  }
+
+  .hero__badge-years {
+    position: relative;
+    margin: 0;
+    font-family: var(--font-display);
+    color: var(--color-orange);
+    font-size: 3.88cqw;
+  }
+}

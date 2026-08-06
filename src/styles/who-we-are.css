@@ -1,0 +1,122 @@
+.who-we-are {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-10);
+  background: var(--gradient-navy);
+  padding-block: var(--space-10);
+  padding-inline: var(--space-4);
+  text-align: center;
+}
+
+@media (min-width: 1024px) {
+  .who-we-are {
+    align-items: flex-start;
+    text-align: left;
+    padding-block: var(--space-13);
+    padding-inline: var(--container-pad-desktop);
+    gap: var(--space-12);
+  }
+}
+
+.leader-tiles {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-4);
+  width: 100%;
+}
+
+@media (min-width: 1024px) {
+  .leader-tiles {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.leader-tile {
+  position: relative;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 16px;
+  padding: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-4);
+  color: var(--color-white);
+  text-align: left;
+}
+
+.leader-tile__ln {
+  position: absolute;
+  top: var(--space-5);
+  right: var(--space-5);
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: var(--radius-btn);
+  transition: background-color 0.2s var(--ease-out);
+}
+
+.leader-tile__ln:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.leader-tile__photo {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 4px solid rgba(0, 0, 0, 0.3);
+}
+
+@media (min-width: 1024px) {
+  .leader-tile__photo {
+    width: 160px;
+    height: 160px;
+  }
+}
+
+.leader-tile__header {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.leader-tile__name {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 28px;
+}
+
+@media (min-width: 1024px) {
+  .leader-tile__name {
+    font-size: 32px;
+  }
+}
+
+.leader-tile__role {
+  margin: 0;
+  font-weight: var(--fw-semibold);
+  font-size: 20px;
+  opacity: 0.6;
+}
+
+.leader-tile__decor {
+  display: block;
+  width: 40px;
+  height: 4px;
+  background: var(--color-orange);
+}
+
+.leader-tile p {
+  margin: 0;
+  font-weight: var(--fw-light);
+  font-size: 20px;
+  line-height: 1.35;
+}

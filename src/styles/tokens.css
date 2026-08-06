@@ -1,0 +1,70 @@
+:root {
+  /* This site currently ships a light-mode design only — no dark variant exists in
+     Figma yet, so tell the browser not to auto-darken it (forced/heuristic dark mode
+     otherwise repaints unstyled backgrounds and mangles the navy/orange palette). */
+  color-scheme: light;
+
+  /* Colors — from Figma file styles */
+  --color-white: #ffffff;
+  --color-orange: #e94600;
+  --color-blue: #0a195a;
+  --color-grey: #232323;
+  --color-navy-start: #051432;
+  --color-navy-end: #0a193c;
+  --gradient-navy: linear-gradient(to top, var(--color-navy-start), var(--color-navy-end));
+
+  /* Type */
+  --font-body: "Poppins", sans-serif;
+  --font-display: "Russo One", sans-serif;
+  --fw-light: 300;
+  --fw-semibold: 600;
+
+  /* Spacing (8px grid, values used across sections) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 16px;
+  --space-4: 24px;
+  --space-5: 32px;
+  --space-6: 40px;
+  --space-7: 48px;
+  --space-8: 56px;
+  --space-9: 64px;
+  --space-10: 80px;
+  --space-11: 96px;
+  --space-12: 104px;
+  --space-13: 128px;
+
+  /* Layout */
+  --container-max: 1728px;
+  --container-pad-mobile: var(--space-4);
+  /* Stepped, not fluid: a single clamp() still read as too much padding through most of
+     the 1024-1440px "narrow desktop" range (it doesn't reach the 240px max until 1728px,
+     but was already 140-180px well below that). Explicit tiers below give more control
+     over each step than one continuous curve. Only reaches the full 240px at the Figma
+     reference width (1728px) and above. */
+  --container-pad-desktop: var(--space-9); /* 64px, ≥1024px */
+  --header-height-mobile: 56px;
+  --header-height-desktop: 70px;
+  --radius-btn: 4px;
+
+  /* Motion */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@media (min-width: 1280px) {
+  :root {
+    --container-pad-desktop: var(--space-11); /* 96px */
+  }
+}
+
+@media (min-width: 1440px) {
+  :root {
+    --container-pad-desktop: 140px;
+  }
+}
+
+@media (min-width: 1728px) {
+  :root {
+    --container-pad-desktop: 240px;
+  }
+}

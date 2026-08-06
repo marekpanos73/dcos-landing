@@ -1,0 +1,54 @@
+.mobile-menu {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: var(--header-height-mobile);
+  bottom: 0;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: var(--space-4);
+  background: linear-gradient(to top, rgba(5, 20, 50, 0.85), rgba(10, 25, 60, 0.85));
+  backdrop-filter: blur(12px);
+  opacity: 0;
+  transform: translateY(-8px);
+  transition:
+    opacity 0.25s var(--ease-out),
+    transform 0.25s var(--ease-out);
+}
+
+.mobile-menu.is-open {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.mobile-menu__nav {
+  display: flex;
+  flex-direction: column;
+}
+
+.mobile-menu__nav a {
+  font-weight: var(--fw-semibold);
+  font-size: 18px;
+  color: var(--color-white);
+  padding-block: var(--space-5);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.mobile-menu__nav a:first-child {
+  padding-top: 0;
+}
+
+.mobile-menu__nav a:last-child {
+  border-bottom: none;
+}
+
+.mobile-menu__cta {
+  width: 100%;
+}
+
+/* No breakpoint hides this — it's already closed by default via the `hidden` attribute
+   and only ever opened by clicking the hamburger toggle, which itself is only visible
+   when the desktop nav doesn't fit (see header.css / header-nav.js). A fixed breakpoint
+   here would fight that JS-driven fallback at widths above it. */
