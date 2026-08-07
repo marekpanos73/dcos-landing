@@ -14,7 +14,7 @@ gsap.registerPlugin(ScrollTrigger);
  */
 
 const MAX_TILT_DEG = 7; // mouse tilt full range: -7deg (pointer bottom-left) to +7deg (top-right)
-const SCROLL_ROTATION_DEG = 28; // total rotation as the hero scrolls out of view
+const SCROLL_ROTATION_DEG = -60; // total rotation as the hero scrolls out of view; negative = counter-clockwise
 
 const canTilt =
   typeof matchMedia === "function" &&
