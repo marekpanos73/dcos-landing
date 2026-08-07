@@ -3,6 +3,28 @@
 Rationale for decisions that deliberately deviate from a literal 1:1 Figma reproduction.
 Read this before implementing a section that touches one of these areas.
 
+## Gotcha: `.mobile-menu`'s `hidden` attribute did nothing — it ate every hover/click
+
+The actual cause of "`:hover` doesn't work anywhere except the header button," after the
+GSAP fix below turned out not to be it. [mobile-menu.css](../src/styles/mobile-menu.css)'s
+`.mobile-menu` is `position: fixed` covering the full viewport below the header, and
+`display: flex` unconditionally. The closed state was only `opacity: 0` — nothing set
+`pointer-events: none`, so the fully invisible panel sat on top of every section on the
+page (everything except the header, which it doesn't cover) and silently absorbed every
+mouse event meant for the actual content underneath. It also explains a reported
+`backdrop-filter` flicker over content scrolled under the header: the "closed" panel was
+still compositing at all times, since nothing actually removed it from the render tree.
+
+The `hidden` HTML attribute [mobile-menu.js](../src/scripts/mobile-menu.js) toggles doesn't
+save you here by default: `[hidden] { display: none }` is a browser default with selector
+specificity (0,1,0) — identical to `.mobile-menu`'s own `display: flex` rule — and author
+CSS wins that tie regardless of the attribute being present. Fixed by adding
+`pointer-events: none` to the closed state (`auto` on `.is-open`) and separately
+reasserting `.mobile-menu[hidden] { display: none }` explicitly rather than trusting the
+UA default to win. Same trap applies to any other element toggled via the `hidden`
+attribute alongside its own unconditional `display` rule — check for this combination
+before assuming `hidden` is doing anything.
+
 ## Gotcha: GSAP tweens can leave elements permanently offset, killing :hover
 
 `gsap.from(el, {y: N, ...})` — even a single, un-staggered, non-timeline call — can finish
@@ -15,10 +37,12 @@ attribute by hand doesn't fix it, since the stale value lives in GSAP's cache, n
 
 Symptom on this site: [hero-animations.js](../src/scripts/hero-animations.js)'s entrance
 timeline and [scroll-animations.js](../src/scripts/scroll-animations.js)'s ScrollTrigger
-reveals left every button and link they animated (i.e. almost every interactive element on
-the page) sitting ~16–32px off from its intended position — invisible at a glance since the
-offset is small, but it meant `:hover` looked completely dead on every button *except* the
-one in the header, which is the only one no GSAP tween ever touches.
+reveals left every button and link they animated sitting ~16–32px off from its intended
+position — invisible at a glance since the offset is small. Worth fixing on its own merits,
+but it turned out to be a red herring for the "hover is dead everywhere except the header"
+report specifically — see the `.mobile-menu` gotcha below for what that actually was. Don't
+assume a stray-transform fix like this one has resolved an interactivity report just
+because it's a plausible-sounding mechanism; verify against the actual reported symptom.
 
 **Fix — always clean up after a tween/timeline that touches anything interactive:**
 `onComplete: () => gsap.set(targets, { clearProps: "all" })`. Both files above do this now.
