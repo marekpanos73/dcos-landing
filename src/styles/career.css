@@ -7,7 +7,7 @@
   --glow-position: 18% 0%;
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 900px) {
   .career {
     text-align: left;
     padding-block: var(--space-13);
@@ -26,7 +26,7 @@
   padding-inline: var(--space-4);
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 900px) {
   .career__inner {
     gap: var(--space-6);
     padding-inline: var(--container-pad-desktop);
@@ -40,7 +40,7 @@
   gap: var(--space-9);
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 900px) {
   .career__content {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -56,13 +56,23 @@
   gap: var(--space-6);
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 900px) {
   .career__text {
     align-items: flex-start;
     /* Right breathing room — .career__content's own column-gap (--grid-col-gap) is tight
        (24px, same as the tile grids), so the left column's own text needs its own padding
        to keep it clear of column 2 instead of relying on the gap alone. */
-    padding-inline-end: var(--space-6);
+    padding-inline-end: var(--space-4);
+    /* Grid items default to min-width:auto (their content's min-content), not 0 — without
+       this, the title's longest unbreakable word can force this column wider than its true
+       1fr/50% share (especially at this large font size), pushing the gallery photo out of
+       its column instead of just wrapping the title text. */
+    min-width: 0;
+    /* Belt-and-suspenders alongside min-width:0 and the stepped-down title font size below:
+       if a word is still wider than the column, break it rather than silently overflowing
+       into column 2 — see the "Grid column whose content can't shrink" gotcha in
+       DESIGN-NOTES.md. */
+    overflow-wrap: break-word;
   }
 }
 
@@ -75,9 +85,17 @@
   line-height: 1.2;
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 900px) {
   .career__title {
     padding-inline: 0;
+    /* Stepped down from the full 56px until 1100px — see the matching comment on
+       .section-heading__title in section-heading.css for why. */
+    font-size: 40px;
+  }
+}
+
+@media (min-width: 1100px) {
+  .career__title {
     font-size: 56px;
   }
 }
@@ -89,7 +107,7 @@
   line-height: 1.35;
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 900px) {
   .career__text > p {
     font-size: 24px;
   }

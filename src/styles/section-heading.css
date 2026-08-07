@@ -60,7 +60,7 @@
   color: var(--color-white);
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 900px) {
   .section-top {
     text-align: left;
   }
@@ -77,16 +77,43 @@
        tight (24px, same as the tile grids below it), so the title needs its own padding to
        keep its large display-font text from crowding column 2, instead of relying on the
        gap alone the way it used to when the gap was wider. */
-    padding-inline: 0 var(--space-6);
-    font-size: 56px;
+    padding-inline: 0 var(--space-4);
+    /* 900-1099px only (overridden back to 56px below): at the full display size the
+       longest word in some titles ("odpovědnost.", "transformačních") can be wider than
+       this narrow a column, even with min-width:0 + overflow-wrap below doing their job —
+       break-word then kicks in and hyphenates mid-word, which is a legitimate safety net
+       but looks rough as the *normal* rendering at a width this common. Stepping the font
+       down here means it only needs that safety net in genuinely unusual cases (long
+       untranslated brand names etc), not every render at this width. */
+    font-size: 40px;
+    /* Grid items default to min-width:auto (their content's min-content), not 0 — without
+       this, the title's longest unbreakable word can force this column wider than its true
+       1fr/50% share (especially at this large font size), pushing column 2 — and everything
+       below sharing this row's column boundary via --grid-col-gap, like the tile grids —
+       out of alignment instead of just wrapping the title text. */
+    min-width: 0;
+    /* Belt-and-suspenders alongside min-width:0 and the stepped-down font size above: if a
+       word is still wider than the column despite both (a long untranslated brand name, an
+       unusually narrow window), break it rather than silently overflowing into column 2 —
+       see the "Grid column whose content can't shrink" gotcha in DESIGN-NOTES.md. */
+    overflow-wrap: break-word;
   }
 
   .section-heading__body {
     align-items: flex-start;
     padding-top: var(--space-2);
+    min-width: 0;
+    overflow-wrap: break-word;
   }
 
   .section-heading__body p {
     font-size: 24px;
+  }
+}
+
+@media (min-width: 1100px) {
+  .section-heading__title {
+    padding-inline: 0 var(--space-6);
+    font-size: 56px;
   }
 }

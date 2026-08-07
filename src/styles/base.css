@@ -64,7 +64,7 @@ a {
   padding-inline: var(--container-pad-mobile);
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 900px) {
   .container {
     padding-inline: var(--container-pad-desktop);
   }

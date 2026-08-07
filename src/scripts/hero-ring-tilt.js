@@ -14,7 +14,7 @@ const MAX_ROTATION_DEG = 7; // full range: -7deg (pointer bottom-left) to +7deg 
 const canInteract =
   typeof matchMedia === "function" &&
   matchMedia("(hover: hover) and (pointer: fine)").matches &&
-  matchMedia("(min-width: 1024px)").matches &&
+  matchMedia("(min-width: 900px)").matches &&
   !matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 export function initHeroRingTilt() {

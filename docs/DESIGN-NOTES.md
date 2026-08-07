@@ -69,9 +69,44 @@ Two traps that both look "correct" individually but break this:
   changes where the 50% line effectively falls once you account for it). Row-gap and
   column-gap can differ; column-gap must always be `--grid-col-gap` wherever a row needs
   to align with the rest of the page.
+- **A grid column whose content can't shrink.** Grid items default to `min-width: auto`
+  (their content's min-content size), not `0` — a title in the large display font, or any
+  tile with a long unbreakable word, can hit that min-content width before its column
+  reaches its "fair" 50%/33%/25% `1fr` share. When that happens the track just takes what
+  it needs and the *other* tracks get squeezed to make room, breaking the equal split (and
+  in bad cases overflowing the grid's own container) even though every track is nominally
+  `1fr`. Every grid item on this shared alignment system (`.section-heading__title`/`__body`,
+  `.approach-tile`, `.leader-tile`, `.value-tile`, `.area-tile`, `.reference-tile`,
+  `.career__text`, `.contact__info`, `.site-footer__col`) sets `min-width: 0` for this
+  reason — found via a real bug report: at ~900px the reference-tiles' 4 columns rendered
+  visibly unequal widths (one tile ~35% wider than the narrowest), and separately the
+  who-we-are heading's title/body split drifted off the leader-tiles' column boundary below
+  it.
 
-If a future row needs to join this shared grid, use the same two rules — don't invent a
-new width or gap value that merely "looks aligned" at the width you happen to be testing.
+  `min-width: 0` alone isn't the whole fix, though — it lets the *track* shrink to true
+  equal width, but doesn't stop a word that's now wider than that (now-narrower) track from
+  visibly spilling out of its own box, since overflow is visible by default. That surfaced
+  as a second round of bugs once the first fix shipped: title text overlapping the column
+  next to it, tile text running past its card. Two more rules, both applied alongside
+  `min-width: 0` everywhere above:
+  - **`overflow-wrap: break-word`** as the safety net — if a word truly doesn't fit even
+    after everything else, break it rather than let it overflow into the neighboring column.
+  - **Don't rely on `overflow-wrap` as the *primary* fix for a genuinely-too-narrow grid.**
+    Letting it hyphenate mid-word on every render at a common width (not just a rare
+    untranslated brand name) reads as broken, not resilient. Where that was happening —
+    `.reference-tiles` (4 columns), `.value-tiles` (3 columns), `.site-footer__columns`
+    (4 columns) — the real fix is an intermediate column-count tier: 2 columns from 900px,
+    stepping up to the full count at 1200px (1100px for the footer, which has shorter
+    content) where there's actually enough room. Same idea, separately, for the two big
+    display-font titles that share this grid (`.section-heading__title`, `.career__title`,
+    `.contact__title`): step the font down to 40px from 900px, back to the full 56px at
+    1100px, rather than let `overflow-wrap` hyphenate words like "odpovědnost." or
+    "transformačních" as the normal case at that width.
+
+If a future row needs to join this shared grid, use the same rules — don't invent a new
+width, gap, or min-width value that merely "looks aligned" at the width you happen to be
+testing, and if a tier needs more than min-width:0 + overflow-wrap to look right, an extra
+column-count or font-size step (like the ones above) is the answer, not fighting the text.
 
 ## Gotcha: forced dark mode repainting the page
 
@@ -86,9 +121,9 @@ Figma defines a dark variant, so the browser must be told not to guess.
 
 An earlier version used `clamp(48px, 14vw, 240px)` for `--container-pad-desktop`. It
 technically scaled down below 1728px, but still read as too much padding through most of
-the 1024-1440px range (140-180px there) — one continuous curve doesn't give enough control
+the 900-1440px range (140-180px there) — one continuous curve doesn't give enough control
 over how it feels at each width. Replaced with explicit stepped tiers in
-[tokens.css](../src/styles/tokens.css): 64px at 1024px, 96px at 1280px, 140px at 1440px,
+[tokens.css](../src/styles/tokens.css): 64px at 900px, 96px at 1280px, 140px at 1440px,
 240px at 1728px (the Figma reference, unchanged). Add more tiers here rather than reaching
 for a fluid function again if a step still looks off at some width.
 
@@ -132,22 +167,26 @@ There's also deliberately no `min()`/`max()` ceiling on the cqw values anymore �
 graphic keeps scaling up past 1728px instead of freezing there, which is what made it
 read as undersized on wide screens even before the bug above.
 
-The whole `.hero__decor` block renders from `1024px` up, same as the rest of the page's
-sections — earlier this needed a separate, higher 1280px threshold to avoid colliding with
-the text column, but that was compensating for the undersized-cqw bug above; once the
-scaling is correct, testing at 1024px (`.hero__ring`'s bounding box does overlap
-`.hero__content`'s by ~80px there, but the ring is a crescent, not a filled rectangle — the
-actual visible pixels don't touch) showed clean spacing down to that width. If a future
-redesign changes the text column's `max-width` or the decor's proportions, re-verify this
-empirically (screenshot at a few widths) rather than trusting bounding-box math alone —
-that's what produced the wrong "still colliding" call the first time around.
+The whole `.hero__decor` block renders from `900px` up (originally 1024px, see "Content
+breakpoint lowered" below), same as the rest of the page's sections — earlier this needed a
+separate, higher 1280px threshold to avoid colliding with the text column, but that was
+compensating for the undersized-cqw bug above; once the scaling is correct, testing at the
+content breakpoint (`.hero__ring`'s bounding box does overlap `.hero__content`'s there, but
+the ring is a crescent, not a filled rectangle — the actual visible pixels don't touch)
+showed clean spacing down to that width. If a future redesign changes the text column's
+`max-width` or the decor's proportions, re-verify this empirically (screenshot at a few
+widths) rather than trusting bounding-box math alone — that's what produced the wrong "still
+colliding" call the first time around.
 
 ## Header nav: separate breakpoint from the rest of the page, plus a JS fallback
 
 The desktop nav (logo + 6 links + Kontakt button) doesn't reliably fit in one line until
-~1280px — noticeably wider than the 1024px breakpoint the rest of the page's sections use.
+~1280px — noticeably wider than the 900px breakpoint the rest of the page's sections use.
 Rather than force everything to 1280px, the header alone switches at `1280px`
-([header.css](../src/styles/header.css)), while sections keep the general `1024px`.
+([header.css](../src/styles/header.css)), while sections keep the general `900px`. This gap
+is intentional and not a bug to close: between 900 and 1280px the header already needs the
+mobile hamburger (the nav genuinely doesn't fit), but page content is still comfortably wide
+enough to stay in its multi-column desktop layout — see "Content breakpoint lowered" below.
 
 That static breakpoint is the common case, not a guarantee — unusual zoom levels or a font
 metric slightly wider than expected can still overflow it. `header-nav.js` is a safety
@@ -256,7 +295,7 @@ container, border, or separate background fill to build.
 
 Implemented: `.hero__decor` / `.hero__ring` / `.hero__badge` in
 [hero.css](../src/styles/hero.css), markup in [index.html](../index.html). Desktop-only
-(hidden below 1024px to match the Figma mobile frame). Entrance animation (v1, open to
+(hidden below 900px to match the Figma mobile frame). Entrance animation (v1, open to
 revision): fades/scales in after the CTA buttons in the hero timeline, cross accent gets
 its own slight rotate-in — see `animateHero()` in
 [hero-animations.js](../src/scripts/hero-animations.js).
@@ -276,7 +315,7 @@ badge's center. The rotation amount is a diagonal projection of the pointer's no
 position (`(normX - normY) / 2`) — same "/" axis `badge-cross.svg` draws — so pointer
 top-right tilts right, bottom-left tilts left. The "Slavíme" / "20 let" text itself is
 untouched, only the ring and cross graphic move. Desktop + fine-pointer only
-(`hover: hover, pointer: fine, min-width: 1024px`).
+(`hover: hover, pointer: fine, min-width: 900px`).
 
 **`parallax.js`** — scroll-scrubbed (`ScrollTrigger`, `scrub: true`, `ease: "none"`) drift
 on two things: `.hero__decor` (the whole ring/cross/badge group lags behind as hero scrolls
@@ -329,14 +368,44 @@ dependency); icons/vectors are exported and optimized as `.svg` (via `svgo`, als
 dependency). Both tools run through small one-off scripts, not a persisted build-time
 pipeline, since assets are pulled once per section, not on every build.
 
+**Gotcha: Figma's SVG export sets `preserveAspectRatio="none"`.** All 10 client-logo SVGs
+(`src/assets/icons/logos/*.svg`) shipped with this attribute, which tells the SVG to stretch
+and fill whatever box it's placed in instead of preserving its own proportions — invisible
+as long as the `<img>` happens to render at close to the logo's natural aspect ratio, but
+once a narrower grid column (only `height="NN"` is set on these `<img>` tags, no `width`)
+forces the element's rendered width down via `max-width: 100%` while the HTML `height`
+attribute keeps the height pinned, the logo visibly squishes/stretches. Fixed by stripping
+`preserveAspectRatio="none"` from all ten files (falls back to the SVG default
+`xMidYMid meet`, which letterboxes instead of distorting). Re-check for this attribute on
+any future logo/icon pulled through the same export pipeline.
+
 ## Breakpoints
 
 Two Figma frames define the breakpoints: `Home mobile` (base, mobile-first) and
 `Home desktop` (min-width breakpoint). `Mobile menu` is the open state of the mobile nav,
-not a separate breakpoint. Figma doesn't specify the exact px switch-over — `1024px` was
-picked as the desktop `min-width` (standard tablet/desktop boundary); between 390px and
-1024px the mobile layout stretches rather than matching a real Figma frame, since none
-exists for that range.
+not a separate breakpoint. Figma doesn't specify the exact px switch-over — the content
+breakpoint is `900px`; between 390px and 900px the mobile layout stretches rather than
+matching a real Figma frame, since none exists for that range.
+
+### Content breakpoint lowered from 1024px to 900px (2026-08-07)
+
+Per client feedback: at a viewport comfortably wide enough for the desktop content
+layout (multi-column grids, side-by-side sections) to look fine, the page was still
+switching to the single-column mobile layout, because the content breakpoint (1024px) had
+no real justification beyond "standard tablet/desktop boundary" — it wasn't derived from
+when the desktop layout actually needs the room. Lowered to 900px after testing the
+tightest grids at that width (the 3-column `.value-tiles` and 4-column
+`.site-footer__columns` — the footer's longer labels wrap to two lines at 900px but stay
+fully readable, nothing overlaps or truncates).
+
+This is a sitewide, mechanical change — every `@media (min-width: 1024px)` in
+`src/styles/*.css` became `900px` (`header.css`'s separate `1280px` nav breakpoint is
+untouched, see above), plus the matching check in
+[hero-ring-tilt.js](../src/scripts/hero-ring-tilt.js) that gates the mouse-tilt effect to
+the same width the ring/badge actually render at. There's no shared CSS variable for this
+— `@media (min-width: var(--x))` isn't valid CSS, and this project deliberately has no
+preprocessor (CLAUDE.md) — so a future adjustment means repeating the same sitewide
+find-and-replace, not editing one token.
 
 Hero text blocks are implemented as normal document flow with token-based gaps, not as
 literal absolute-positioned copies of Figma's per-node coordinates — the Figma export

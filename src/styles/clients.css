@@ -7,15 +7,13 @@
   text-align: center;
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 900px) {
   .clients {
-    align-items: flex-start;
-    text-align: left;
+    /* "Reference" stays centered like mobile, per client request — align-items:center here
+       only affects children that shrink to their own content width (the eyebrow, the
+       button); .reference-tiles keeps width:100% regardless, so the tile grid itself is
+       unaffected. */
     padding-block: var(--space-13);
-  }
-
-  .clients > .btn {
-    align-self: center;
   }
 }
 
@@ -29,7 +27,18 @@
   width: 100%;
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 900px) {
+  .reference-tiles {
+    /* 2×2 first, not straight to 4 across — at this width each of 4 columns has too little
+       room for a logo + a full paragraph (four tiles ended up visibly unequal width before
+       min-width:0, and even once equal, uncomfortably narrow) — see the reference-tiles
+       entry in DESIGN-NOTES.md. Goes to 4 across at 1200px, where there's enough room per
+       column again. */
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1200px) {
   .reference-tiles {
     grid-template-columns: repeat(4, 1fr);
   }
@@ -45,6 +54,17 @@
   align-items: flex-start;
   gap: var(--space-4);
   text-align: left;
+  /* Grid items default to min-width:auto (their content's min-content), not 0 — without
+     this, one tile's longest unbreakable word can force its column wider than its 1fr
+     share, squeezing the others unequally (and overflowing the grid) instead of just
+     wrapping. Same fix applied everywhere a tile/column sits in a 1fr grid — see
+     section-heading.css, what-we-do.css, tech-domains.css, how-we-work.css,
+     who-we-are.css, career.css, contact.css, footer.css. */
+  min-width: 0;
+  /* Belt-and-suspenders alongside min-width:0: if a word is still wider than the column,
+     break it rather than silently overflowing into the tile next door — see the "Grid
+     column whose content can't shrink" gotcha in DESIGN-NOTES.md. */
+  overflow-wrap: break-word;
 }
 
 .reference-tile__logo {

@@ -6,7 +6,7 @@
   --glow-position: 82% 50%;
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 900px) {
   .who-we-are {
     text-align: left;
     padding-block: var(--space-13);
@@ -26,7 +26,7 @@
   padding-inline: var(--space-4);
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 900px) {
   .who-we-are__inner {
     align-items: flex-start;
     gap: var(--space-12);
@@ -44,7 +44,7 @@
   width: 100%;
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 900px) {
   .leader-tiles {
     grid-template-columns: repeat(2, 1fr);
     /* Column gap must match --grid-col-gap (used by .section-heading above it) — see
@@ -66,6 +66,15 @@
   gap: var(--space-4);
   color: var(--color-white);
   text-align: left;
+  /* Grid items default to min-width:auto (their content's min-content), not 0 — without
+     this, one tile's longest unbreakable word can force its column wider than its 1fr
+     share (and out of alignment with the .section-heading column boundary above it),
+     squeezing the other unequally instead of just wrapping. */
+  min-width: 0;
+  /* Belt-and-suspenders alongside min-width:0: if a word is still wider than the
+     (now-narrower) column, break it rather than silently overflowing into the tile next
+     door — see the "Grid column whose content can't shrink" gotcha in DESIGN-NOTES.md. */
+  overflow-wrap: break-word;
 }
 
 .leader-tile__ln {
@@ -92,7 +101,7 @@
   object-fit: cover;
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 900px) {
   .leader-tile__photo {
     width: 160px;
     height: 160px;
@@ -112,7 +121,7 @@
   font-size: 28px;
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 900px) {
   .leader-tile__name {
     font-size: 32px;
   }

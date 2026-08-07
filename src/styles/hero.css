@@ -17,7 +17,7 @@
   container-type: inline-size;
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 900px) {
   .hero {
     padding-block: var(--space-13);
   }
@@ -34,7 +34,7 @@
   padding-inline: var(--space-4);
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 900px) {
   .hero__container {
     padding-inline: var(--container-pad-desktop);
   }
@@ -73,7 +73,7 @@
   color: var(--color-orange);
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 900px) {
   .hero__brand-line {
     font-size: 56px;
   }
@@ -97,7 +97,7 @@
   line-height: 1.35;
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 900px) {
   .hero__lede {
     font-size: 24px;
   }
@@ -111,7 +111,7 @@
   margin-top: var(--space-4);
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 900px) {
   .hero__actions {
     flex-direction: row;
     width: auto;
@@ -136,11 +136,11 @@
   pointer-events: none;
 }
 
-/* Shown from 1024px — matches the general content breakpoint. Below the 1280px this used
+/* Shown from 900px — matches the general content breakpoint. Below the 1280px this used
    to require, the ring/badge are still visible, just scaled down (see cqw values below);
    testing showed the scaled-down size clears the text column and buttons fine even at
-   1024px, so a hard cutoff isn't needed as long as the scaling is right. */
-@media (min-width: 1024px) {
+   900px, so a hard cutoff isn't needed as long as the scaling is right. */
+@media (min-width: 900px) {
   .hero__decor {
     display: block;
   }

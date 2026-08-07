@@ -20,7 +20,7 @@
     transform 0.2s var(--ease-out);
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 900px) {
   .btn {
     width: auto;
   }

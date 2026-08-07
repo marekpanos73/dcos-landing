@@ -5,7 +5,7 @@
   padding-block: var(--space-10);
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 900px) {
   .what-we-do {
     gap: var(--space-12);
     padding-block: var(--space-13);
@@ -80,22 +80,36 @@
   object-fit: cover;
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 900px) {
+  /* 2 columns first, not straight to 3 across — at this width 3 columns left too little
+     room per tile for titles like "Operational & Business Excellence": min-width:0 (below)
+     correctly forced equal columns, but the columns were then too narrow for the title to
+     even wrap at word boundaries, so overflow-wrap (below) kicked in and hyphenated mid-word
+     ("Operation-al", "Scalabilit-y"). Goes to 3 across at 1200px, where there's enough room
+     per column again — same reasoning as .reference-tiles in clients.css. */
   .value-tiles {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
   }
 
   .value-tile {
     padding: var(--space-6);
     border-bottom: none;
     border-right: 1px solid rgba(35, 35, 35, 0.15);
+    /* Grid items default to min-width:auto (their content's min-content), not 0 — without
+       this, one tile's longest unbreakable word can force its column wider than its 1fr
+       share, squeezing the others unequally instead of just wrapping. */
+    min-width: 0;
+    /* Belt-and-suspenders alongside min-width:0: if a word is still wider than the
+       (now-narrower) column, break it rather than silently overflowing into the tile next
+       door — see the "Grid column whose content can't shrink" gotcha in DESIGN-NOTES.md. */
+    overflow-wrap: break-word;
   }
 
-  .value-tile:nth-child(3n) {
+  .value-tile:nth-child(2n) {
     border-right: none;
   }
 
-  .value-tile:nth-child(n + 4) {
+  .value-tile:nth-child(n + 3) {
     border-top: 1px solid rgba(35, 35, 35, 0.15);
   }
 
@@ -109,5 +123,29 @@
 
   .value-tile--image img {
     aspect-ratio: 416 / 528;
+  }
+}
+
+@media (min-width: 1200px) {
+  .value-tiles {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  /* Undo the 2-column tier's border placement above and reapply it for 3 columns — same
+     grid, same tiles, different row breaks. */
+  .value-tile:nth-child(2n) {
+    border-right: 1px solid rgba(35, 35, 35, 0.15);
+  }
+
+  .value-tile:nth-child(3n) {
+    border-right: none;
+  }
+
+  .value-tile:nth-child(n + 3) {
+    border-top: none;
+  }
+
+  .value-tile:nth-child(n + 4) {
+    border-top: 1px solid rgba(35, 35, 35, 0.15);
   }
 }

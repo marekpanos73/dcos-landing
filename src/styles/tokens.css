@@ -39,11 +39,11 @@
   --container-max: 1728px;
   --container-pad-mobile: var(--space-4);
   /* Stepped, not fluid: a single clamp() still read as too much padding through most of
-     the 1024-1440px "narrow desktop" range (it doesn't reach the 240px max until 1728px,
+     the 900-1440px "narrow desktop" range (it doesn't reach the 240px max until 1728px,
      but was already 140-180px well below that). Explicit tiers below give more control
      over each step than one continuous curve. Only reaches the full 240px at the Figma
      reference width (1728px) and above. */
-  --container-pad-desktop: var(--space-9); /* 64px, ≥1024px */
+  --container-pad-desktop: var(--space-9); /* 64px, ≥900px */
   --header-height-mobile: 56px;
   --header-height-desktop: 70px;
   --radius-btn: 4px;
@@ -52,7 +52,7 @@
      50/50 split, so the second column's width and x-position always match every other
      row's at any viewport width. A fixed-width first column (tried before — see project
      history) only lines up by coincidence at one specific viewport width. */
-  --grid-col-gap: var(--space-4); /* 24px, ≥1024px — matches the tile grids' own gap */
+  --grid-col-gap: var(--space-4); /* 24px, ≥900px — matches the tile grids' own gap */
 
   /* Motion */
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);

@@ -4,7 +4,7 @@
   padding-block: var(--space-9) var(--space-7);
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 900px) {
   .site-footer {
     padding-block: var(--space-11) var(--space-7);
   }
@@ -23,7 +23,7 @@
   padding-inline: var(--space-4);
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 900px) {
   .site-footer__inner {
     padding-inline: var(--container-pad-desktop);
   }
@@ -35,10 +35,20 @@
   gap: var(--space-9);
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 900px) {
+  /* 2 columns first, not straight to 4 across — same reasoning as .reference-tiles
+     (clients.css) and .value-tiles (what-we-do.css): 4 columns left too little room for
+     "Ochrana osobních údajů" / "Whistleblowing" to wrap at word boundaries, so
+     overflow-wrap (below) hyphenated them mid-word. Goes to 4 across at 1100px. */
+  .site-footer__columns {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-9);
+  }
+}
+
+@media (min-width: 1100px) {
   .site-footer__columns {
     grid-template-columns: repeat(4, 1fr);
-    gap: var(--space-9);
   }
 }
 
@@ -47,6 +57,14 @@
   flex-direction: column;
   align-items: flex-start;
   gap: var(--space-4);
+  /* Grid items default to min-width:auto (their content's min-content), not 0 — without
+     this, one column's longest unbreakable word/link can force its track wider than its
+     1fr share, squeezing the others unequally instead of just wrapping. */
+  min-width: 0;
+  /* Belt-and-suspenders alongside min-width:0: if a word is still wider than the
+     (now-narrower) column, break it rather than silently overflowing into the column next
+     door — see the "Grid column whose content can't shrink" gotcha in DESIGN-NOTES.md. */
+  overflow-wrap: break-word;
 }
 
 .site-footer__col p {

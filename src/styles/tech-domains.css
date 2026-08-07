@@ -6,7 +6,7 @@
   --glow-position: 18% 100%;
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 900px) {
   .tech-domains {
     padding-block: var(--space-13);
   }
@@ -27,16 +27,13 @@
   text-align: center;
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 900px) {
   .tech-domains__inner {
-    align-items: flex-start;
-    text-align: left;
+    /* Title stays centered like mobile, per client request — align-items:center here only
+       affects children that shrink to their own content width (the title, the button);
+       .area-tiles keeps width:100% regardless, so the tile grid itself is unaffected. */
     padding-inline: var(--container-pad-desktop);
     gap: var(--space-9);
-  }
-
-  .tech-domains__inner > .btn {
-    align-self: center;
   }
 }
 
@@ -49,7 +46,7 @@
   line-height: 1.2;
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 900px) {
   .tech-domains__title {
     padding-inline: 0;
     font-size: 56px;
@@ -66,7 +63,7 @@
   width: 100%;
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 900px) {
   .area-tiles {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -81,6 +78,14 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
+  /* Grid items default to min-width:auto (their content's min-content), not 0 — without
+     this, one tile's longest unbreakable word can force its column wider than its 1fr
+     share, squeezing the other unequally instead of just wrapping. */
+  min-width: 0;
+  /* Belt-and-suspenders alongside min-width:0: if a word is still wider than the
+     (now-narrower) column, break it rather than silently overflowing into the tile next
+     door — see the "Grid column whose content can't shrink" gotcha in DESIGN-NOTES.md. */
+  overflow-wrap: break-word;
 }
 
 .area-tile h3 {
@@ -89,7 +94,7 @@
   font-size: 28px;
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 900px) {
   .area-tile h3 {
     font-size: 32px;
   }

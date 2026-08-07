@@ -1,4 +1,4 @@
-/* Desktop nav needs more room than the general 1024px content breakpoint — logo +
+/* Desktop nav needs more room than the general 900px content breakpoint — logo +
    6 nav links + Kontakt button don't reliably fit until ~1280px. Keep this in sync with
    NAV_BREAKPOINT in src/scripts/header-nav.js, which also force-switches to the mobile
    menu below this width if the nav content still doesn't fit (e.g. unusual zoom/fonts). */
