@@ -2,8 +2,8 @@ const ANGLE = (45 * Math.PI) / 180;
 const DIR = { x: -Math.cos(ANGLE), y: Math.sin(ANGLE) }; // along the line
 const NORMAL = { x: Math.cos(ANGLE), y: Math.sin(ANGLE) }; // spacing axis
 
-const LINE_SPACING = 26;
-const STROKE_WIDTH = 1.4;
+const LINE_SPACING = 19;
+const STROKE_WIDTH = 1.1;
 const EDGE_ALPHA = 0.05;
 const CENTER_ALPHA = 0.16;
 

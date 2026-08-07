@@ -28,6 +28,10 @@
   position: absolute;
   inset: 0;
   z-index: 0;
-  background: radial-gradient(circle at 82% 100%, rgba(255, 255, 255, 0.12), transparent 45%);
+  /* --glow-position is set per section (see hero.css, tech-domains.css, who-we-are.css,
+     career.css) to match where Figma places the glow's center in that block — it isn't
+     the same spot everywhere. 82% 100% (bottom-right) is the fallback for any block that
+     doesn't override it. */
+  background: radial-gradient(circle at var(--glow-position, 82% 100%), rgba(255, 255, 255, 0.12), transparent 45%);
   pointer-events: none;
 }
