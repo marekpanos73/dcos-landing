@@ -8,7 +8,10 @@
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: var(--space-4);
+  /* No top padding here — the first nav link's own padding-block already gives it the
+     same top rhythm every other link gets from its predecessor's padding-block, so adding
+     the container's inset on top of that (as this used to) doubled it up. */
+  padding: 0 var(--space-4) var(--space-4);
   background: var(--gradient-navy);
   opacity: 0;
   /* Closed state is opacity:0, not display:none (that's what the transition animates) —
