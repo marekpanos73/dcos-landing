@@ -10,11 +10,16 @@
   box-shadow: 0 0 8px rgba(0, 0, 0, 0.15);
 }
 
+/* max-width + margin-inline:auto is the same box model as .container (base.css), so this
+   row's content lines up with every other section's shared column at any viewport width —
+   .site-header itself stays full-bleed (background, sticky) while this inner row caps. */
 .site-header__inner {
   display: flex;
   align-items: center;
   justify-content: space-between;
   height: var(--header-height-mobile);
+  max-width: var(--container-max);
+  margin-inline: auto;
   padding-inline: var(--space-4);
 }
 

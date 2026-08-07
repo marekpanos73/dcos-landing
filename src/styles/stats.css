@@ -7,15 +7,23 @@
   backdrop-filter: blur(80px);
   -webkit-backdrop-filter: blur(80px);
   padding-block: var(--space-10);
-  padding-inline: var(--space-6);
+}
+
+/* max-width + margin-inline:auto is the same box model as .container (base.css), so this
+   section's content lines up with every other section's shared column at any viewport
+   width — .stats itself stays full-bleed (frosted background) while this wrapper caps. */
+.stats__inner {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: var(--space-9);
+  max-width: var(--container-max);
+  margin-inline: auto;
+  padding-inline: var(--space-6);
 }
 
 @media (min-width: 1024px) {
-  .stats {
+  .stats__inner {
     padding-inline: var(--container-pad-desktop);
   }
 }

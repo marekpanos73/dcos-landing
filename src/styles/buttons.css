@@ -58,8 +58,7 @@
 }
 
 .btn--primary:hover {
-  background: #f18759; /* fallback for browsers without color-mix() support */
-  background: color-mix(in srgb, var(--color-orange) 65%, white);
+  background: var(--color-orange-hover);
 }
 
 .btn--outline {
@@ -83,6 +82,5 @@
 }
 
 .btn--header:hover {
-  background: #f18759; /* fallback for browsers without color-mix() support */
-  background: color-mix(in srgb, var(--color-orange) 65%, white);
+  background: var(--color-orange-hover);
 }

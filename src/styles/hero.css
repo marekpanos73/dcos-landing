@@ -1,5 +1,7 @@
 .hero {
   position: relative;
+  /* Glow center per Figma: bottom-right, under the "Slavíme 20 let" badge. */
+  --glow-position: 82% 100%;
   /* Not clipped: the ring (.hero__ring) is designed to bleed past the hero's own bottom
      edge into the Stats section below, per Figma. Horizontal overflow is still caught by
      body's overflow-x:hidden. */
@@ -21,25 +23,32 @@
   }
 }
 
+/* max-width + margin-inline:auto is the same box model as .container (base.css), so this
+   section's content lines up with every other section's shared column at any viewport
+   width. Deliberately a separate element from .hero__decor (see .hero__content below and
+   the .hero comment) — its padding must not shrink .hero's own content box, which
+   .hero__ring / .hero__badge size themselves against via cqw. */
+.hero__container {
+  max-width: var(--container-max);
+  margin-inline: auto;
+  padding-inline: var(--space-4);
+}
+
+@media (min-width: 1024px) {
+  .hero__container {
+    padding-inline: var(--container-pad-desktop);
+  }
+}
+
 .hero__content {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: var(--space-5);
+  /* Matches Figma's w-[612px] on the text itself — narrower than .hero__container's full
+     content width so long lines of body copy don't stretch past a comfortable measure. */
   max-width: 612px;
-  /* margin, not padding — keeps max-width as the actual text column width (matching
-     Figma's w-[612px] on the text itself) and, more importantly, doesn't touch .hero's
-     content box that .hero__ring / .hero__badge size themselves against (see .hero).
-     Both sides: on mobile there's no max-width headroom to rely on for a right inset
-     (612px is wider than the viewport), so it needs its own margin same as the left. */
-  margin-inline: var(--space-4);
   color: var(--color-white);
-}
-
-@media (min-width: 1024px) {
-  .hero__content {
-    margin-inline: var(--container-pad-desktop);
-  }
 }
 
 .hero__brand {

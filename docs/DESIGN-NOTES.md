@@ -198,6 +198,13 @@ block edges and slightly thicker toward the middle. Those blocks are fixed heigh
 design, but on the real site dark-blue block height varies with content — so the pattern
 can't be a fixed-size raster or a rigid line grid without breaking on other heights.
 
+Per client request, the pattern now also runs on every other dark-blue block, not just the
+two Figma originally specified — `[data-line-pattern]` is set on `.mobile-menu` (0.6),
+`.hero` (1), `.tech-domains` (0.7), `.who-we-are` (0.7), `.career` (0.6), and `.site-footer`
+(0.5). The opacity values are a judgment call (lighter on blocks with a lot of card/photo
+content already competing for attention), not pulled from Figma — adjust freely if a
+section reads too busy or too flat.
+
 **Static look:** a repeating diagonal-line pattern that tiles at any block height, with a
 soft alpha falloff from the edges toward the middle — faking the "thicker in the middle"
 look without literal variable stroke width.
@@ -257,9 +264,17 @@ its own slight rotate-in — see `animateHero()` in
 ## Background glow on dark-blue blocks
 
 Figma achieves the lightening effect with blurred white circle layers. On the web this is
-reproduced directly as one or two `radial-gradient()`s in the block's `background`
-(actual color, not a white overlay) — same visual effect, no extra DOM layers, no blur
-filter cost, and it scales with block size automatically.
+reproduced as a `radial-gradient()` on a `.bg-navy--glow::before` pseudo-element
+([line-pattern.css](../src/styles/line-pattern.css)) — same visual effect, no extra DOM
+layers, no blur filter cost, and it scales with block size automatically.
+
+The glow's center isn't the same spot in every block — Figma places it differently per
+section. `.bg-navy--glow::before` reads its position from a `--glow-position` custom
+property (`circle at var(--glow-position, 82% 100%)`), which each block sets on itself:
+`.hero` 82% 100% (bottom-right, under the "Slavíme 20 let" badge), `.tech-domains` 18% 100%
+(bottom-left), `.who-we-are` 82% 50% (right edge, vertically centered), `.career` 18% 0%
+(top-left). `.site-footer` deliberately has no glow at all per Figma — it doesn't carry the
+`bg-navy--glow` class, just the plain `--gradient-navy` background.
 
 ## Animation roadmap
 

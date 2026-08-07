@@ -2,6 +2,8 @@
   background: var(--gradient-navy);
   padding-block: var(--space-10);
   text-align: center;
+  /* Glow center per Figma: right edge, vertically centered. */
+  --glow-position: 82% 50%;
 }
 
 @media (min-width: 1024px) {
