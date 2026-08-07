@@ -12,14 +12,30 @@
   background: linear-gradient(to top, rgba(5, 20, 50, 0.85), rgba(10, 25, 60, 0.85));
   backdrop-filter: blur(12px);
   opacity: 0;
+  /* Closed state is opacity:0, not display:none (that's what the transition animates) —
+     without this, the panel is still a full-viewport (below the header) fixed layer that
+     silently eats every hover/click on the entire page underneath it, even though it's
+     invisible. It's also why the panel keeps compositing at all when "closed", which is
+     what caused the backdrop-filter flicker over content scrolled under the header. */
+  pointer-events: none;
   transform: translateY(-8px);
   transition:
     opacity 0.25s var(--ease-out),
     transform 0.25s var(--ease-out);
 }
 
+/* Belt-and-suspenders for the same bug: `[hidden]` and `.mobile-menu` both have selector
+   specificity (0,1,0), so this class's `display: flex` wins the cascade over the browser's
+   default `[hidden] { display: none }` regardless of the `hidden` attribute JS sets while
+   idle — reassert it explicitly so the closed panel is fully out of the render/a11y tree,
+   not just non-interactive. */
+.mobile-menu[hidden] {
+  display: none;
+}
+
 .mobile-menu.is-open {
   opacity: 1;
+  pointer-events: auto;
   transform: translateY(0);
 }
 
