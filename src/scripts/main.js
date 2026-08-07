@@ -10,6 +10,8 @@ import { animateHero } from "./hero-animations.js";
 import { initContactForm } from "./contact-form.js";
 import { initScrollAnimations } from "./scroll-animations.js";
 import { initButtonLabels } from "./button-labels.js";
+import { initHeroRingTilt } from "./hero-ring-tilt.js";
+import { initParallax } from "./parallax.js";
 
 initHeaderNav();
 initLinePatterns();
@@ -18,3 +20,5 @@ animateHero();
 initContactForm();
 initScrollAnimations();
 initButtonLabels();
+initHeroRingTilt();
+initParallax();

@@ -106,6 +106,10 @@
 
 .career__gallery {
   width: 100%;
+  /* No overflow:hidden here on purpose — career-photos.webp is a single pre-composed
+     collage (four photos arranged edge-to-edge in one file), so parallax.js drifts this
+     whole block vertically instead of scaling+clipping the image, which would crop directly
+     into that composition. */
 }
 
 .career__gallery-photo {

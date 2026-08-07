@@ -261,6 +261,38 @@ revision): fades/scales in after the CTA buttons in the hero timeline, cross acc
 its own slight rotate-in — see `animateHero()` in
 [hero-animations.js](../src/scripts/hero-animations.js).
 
+## Hero ring/cross mouse tilt, and scroll parallax (implemented 2026-08-07)
+
+Per client request. Two separate scripts, both gated behind
+`prefers-reduced-motion: reduce` (skip entirely, no listener attached):
+
+**`hero-ring-tilt.js`** — `.hero__ring` and `.hero__badge-cross` rotate a few degrees
+(±7°, `MAX_ROTATION_DEG`) toward the pointer's position in the hero, via `gsap.quickTo` for
+smooth eased following. Both pivot around the "Slavíme 20 let" badge's own center — the
+ring needs its `transform-origin` computed and kept in sync (via `ResizeObserver`) since its
+own box center isn't the badge's center; the cross doesn't, since it already fills
+`.hero__badge` exactly (`inset: 0`) so its default 50% 50% origin already lands on the
+badge's center. The rotation amount is a diagonal projection of the pointer's normalized
+position (`(normX - normY) / 2`) — same "/" axis `badge-cross.svg` draws — so pointer
+top-right tilts right, bottom-left tilts left. The "Slavíme" / "20 let" text itself is
+untouched, only the ring and cross graphic move. Desktop + fine-pointer only
+(`hover: hover, pointer: fine, min-width: 1024px`).
+
+**`parallax.js`** — scroll-scrubbed (`ScrollTrigger`, `scrub: true`, `ease: "none"`) drift
+on two things: `.hero__decor` (the whole ring/cross/badge group lags behind as hero scrolls
+away) and `.career__gallery` (the career collage block). Both are kept deliberately modest —
+tuned down twice already after the first two passes overshot: `.hero__decor`'s range pushed
+the ring down into the Stats section's client-logos content (it already bleeds past hero's
+own bottom edge by design, so parallax on top of that adds up fast), and an earlier version
+also scaled+clipped photos for parallax "overscan room", which is fine for an ordinary photo
+but wrecked `career-photos.webp` specifically — that file is a single pre-composed collage
+(four photos arranged edge-to-edge), so scaling it up to avoid revealing a frame edge crops
+directly into the composition instead. `.career__gallery` deliberately has no
+`overflow: hidden` and its image gets no `scale`/`clip` treatment for this reason — if a
+future parallax pass touches it again, drift the block, don't scale the image.
+`.value-tile--image` (the "Řešení" photo) had the same scale-based treatment tried and
+dropped entirely — no parallax on it at all now, plain photo, per client feedback.
+
 ## Background glow on dark-blue blocks
 
 Figma achieves the lightening effect with blurred white circle layers. On the web this is
