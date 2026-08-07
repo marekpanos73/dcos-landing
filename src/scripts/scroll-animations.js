@@ -3,9 +3,10 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 gsap.registerPlugin(ScrollTrigger);
 
+// .value-tiles has its own richer assembly/cascade entrance — see tech-grid.js — so it's
+// deliberately excluded here to avoid two reveal systems animating the same elements.
 const REVEAL_GROUPS = [
   { group: ".section-top", items: null },
-  { group: ".value-tiles", items: ".value-tile" },
   { group: ".area-tiles", items: ".area-tile" },
   { group: ".approach-tiles", items: ".approach-tile" },
   { group: ".leader-tiles", items: ".leader-tile" },

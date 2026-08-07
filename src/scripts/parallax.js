@@ -7,7 +7,9 @@ gsap.registerPlugin(ScrollTrigger);
 // edges are meaningful — four separate photos arranged edge-to-edge in one file. Scaling it
 // up to get overscan room would crop directly into that composition, so instead the whole
 // block drifts as-is, uncropped, rather than the image moving inside a clipped frame.
-const COLLAGE_DRIFT_RANGE = 70; // px, total travel
+// 130 amplifies the previous 70 — brief asked for the existing effect to read as clearly
+// stronger; re-check for edge overlap with career__text/adjacent sections if tuned further.
+const COLLAGE_DRIFT_RANGE = 130; // px, total travel
 
 // Kept modest on purpose: the ring already bleeds past .hero's own bottom edge into Stats by
 // design (hero.css) — too much extra drift here pushes it down into the client-logos content

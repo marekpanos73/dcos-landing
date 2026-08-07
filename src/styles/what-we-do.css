@@ -71,6 +71,9 @@
 
 .value-tile--image {
   padding: 0;
+  /* Contains the hover zoom below so it can't bleed into neighboring tiles or change the
+     grid's own geometry. */
+  overflow: hidden;
 }
 
 .value-tile--image img {
@@ -78,6 +81,13 @@
   height: 100%;
   aspect-ratio: 390 / 434;
   object-fit: cover;
+  transition: transform 0.5s var(--ease-out);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .value-tile--image:hover img {
+    transform: scale(1.06);
+  }
 }
 
 @media (min-width: 900px) {
