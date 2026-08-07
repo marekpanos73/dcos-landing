@@ -59,6 +59,10 @@
 @media (min-width: 1024px) {
   .career__text {
     align-items: flex-start;
+    /* Right breathing room — .career__content's own column-gap (--grid-col-gap) is tight
+       (24px, same as the tile grids), so the left column's own text needs its own padding
+       to keep it clear of column 2 instead of relying on the gap alone. */
+    padding-inline-end: var(--space-6);
   }
 }
 

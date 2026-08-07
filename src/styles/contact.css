@@ -31,6 +31,15 @@
   gap: var(--space-4);
 }
 
+@media (min-width: 1024px) {
+  .contact__info {
+    /* Right breathing room — .contact__layout's own column-gap (--grid-col-gap) is tight
+       (24px, same as the tile grids), so the left column's own text needs its own padding
+       to keep it clear of the form column instead of relying on the gap alone. */
+    padding-inline-end: var(--space-6);
+  }
+}
+
 .contact__title {
   margin: 0;
   padding-inline: var(--space-5);

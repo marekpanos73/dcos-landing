@@ -73,7 +73,11 @@
   }
 
   .section-heading__title {
-    padding-inline: 0;
+    /* Right breathing room only — .section-heading's own column-gap (--grid-col-gap) is
+       tight (24px, same as the tile grids below it), so the title needs its own padding to
+       keep its large display-font text from crowding column 2, instead of relying on the
+       gap alone the way it used to when the gap was wider. */
+    padding-inline: 0 var(--space-6);
     font-size: 56px;
   }
 

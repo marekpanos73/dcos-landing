@@ -52,7 +52,7 @@
      50/50 split, so the second column's width and x-position always match every other
      row's at any viewport width. A fixed-width first column (tried before — see project
      history) only lines up by coincidence at one specific viewport width. */
-  --grid-col-gap: var(--space-9); /* 64px, ≥1024px */
+  --grid-col-gap: var(--space-4); /* 24px, ≥1024px — matches the tile grids' own gap */
 
   /* Motion */
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
