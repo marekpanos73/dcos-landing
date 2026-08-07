@@ -2,6 +2,9 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  /* Full-width by default so every standalone CTA fills its content column on mobile and
+     is easy to reach with either thumb — desktop goes back to sizing to content below. */
+  width: 100%;
   padding: var(--space-3) var(--space-4);
   border-radius: var(--radius-btn);
   font-family: var(--font-body);
@@ -15,6 +18,12 @@
     background-color 0.2s var(--ease-out),
     border-color 0.2s var(--ease-out),
     transform 0.2s var(--ease-out);
+}
+
+@media (min-width: 1024px) {
+  .btn {
+    width: auto;
+  }
 }
 
 .btn:active {

@@ -9,8 +9,7 @@
   flex-direction: column;
   justify-content: space-between;
   padding: var(--space-4);
-  background: linear-gradient(to top, rgba(5, 20, 50, 0.85), rgba(10, 25, 60, 0.85));
-  backdrop-filter: blur(12px);
+  background: var(--gradient-navy);
   opacity: 0;
   /* Closed state is opacity:0, not display:none (that's what the transition animates) —
      without this, the panel is still a full-viewport (below the header) fixed layer that
@@ -50,10 +49,6 @@
   color: var(--color-white);
   padding-block: var(--space-5);
   border-bottom: 1px solid rgba(255, 255, 255, 0.15);
-}
-
-.mobile-menu__nav a:first-child {
-  padding-top: 0;
 }
 
 .mobile-menu__nav a:last-child {
