@@ -12,7 +12,8 @@
      same top rhythm every other link gets from its predecessor's padding-block, so adding
      the container's inset on top of that (as this used to) doubled it up. */
   padding: 0 var(--space-4) var(--space-4);
-  background: var(--gradient-navy);
+  background: linear-gradient(to top, rgba(5, 20, 50, 0.85), rgba(10, 25, 60, 0.85));
+  backdrop-filter: blur(24px);
   opacity: 0;
   /* Closed state is opacity:0, not display:none (that's what the transition animates) —
      without this, the panel is still a full-viewport (below the header) fixed layer that
