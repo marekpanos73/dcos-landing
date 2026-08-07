@@ -161,6 +161,9 @@
 
 .contact-form__consent {
   display: flex;
+  /* Mobile stacks the switch above the text (own row each); desktop goes back to side by
+     side below. */
+  flex-direction: column;
   align-items: flex-start;
   gap: var(--space-4);
   /* The form itself sits inside .section-top, which centers text on mobile — this label
@@ -170,6 +173,12 @@
   font-size: 16px;
   line-height: 1.35;
   color: var(--color-grey);
+}
+
+@media (min-width: 1024px) {
+  .contact-form__consent {
+    flex-direction: row;
+  }
 }
 
 .contact-form__consent input {

@@ -5,7 +5,7 @@
      body's overflow-x:hidden. */
   overflow: visible;
   background: var(--gradient-navy);
-  padding-block: var(--space-11) var(--space-13);
+  padding-block: var(--space-9) var(--space-13);
   /* No padding-inline here on purpose — see .hero__content's margin-inline-start below.
      cqw units (used by .hero__ring / .hero__badge further down) are a percentage of the
      query container's *content box*, i.e. after its own padding is subtracted. Since the
