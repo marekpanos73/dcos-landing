@@ -29,6 +29,7 @@
 
 .section-heading__title {
   margin: 0;
+  padding-inline: var(--space-5);
   font-family: var(--font-display);
   font-weight: 400;
   font-size: 32px;
@@ -72,6 +73,7 @@
   }
 
   .section-heading__title {
+    padding-inline: 0;
     font-size: 56px;
   }
 

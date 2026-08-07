@@ -33,6 +33,7 @@
 
 .contact__title {
   margin: 0;
+  padding-inline: var(--space-5);
   font-family: var(--font-display);
   font-weight: 400;
   font-size: 32px;
@@ -42,6 +43,7 @@
 
 @media (min-width: 1024px) {
   .contact__title {
+    padding-inline: 0;
     font-size: 56px;
   }
 }
@@ -161,6 +163,9 @@
   display: flex;
   align-items: flex-start;
   gap: var(--space-4);
+  /* The form itself sits inside .section-top, which centers text on mobile — this label
+     stays left-aligned regardless, switch and wrapped text both flush to the same edge. */
+  text-align: left;
   font-weight: var(--fw-light);
   font-size: 16px;
   line-height: 1.35;
@@ -168,11 +173,43 @@
 }
 
 .contact-form__consent input {
-  width: 20px;
+  appearance: none;
+  width: 44px;
   height: 20px;
-  margin-top: 2px;
-  accent-color: var(--color-orange);
+  margin: 2px 0 0;
+  border: 1.5px solid rgba(35, 35, 35, 0.2);
+  border-radius: 999px;
+  background: var(--color-white);
+  position: relative;
   flex-shrink: 0;
+  cursor: pointer;
+  transition:
+    background-color 0.2s var(--ease-out),
+    border-color 0.2s var(--ease-out);
+}
+
+.contact-form__consent input::before {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: rgba(35, 35, 35, 0.3);
+  transition:
+    transform 0.2s var(--ease-out),
+    background-color 0.2s var(--ease-out);
+}
+
+.contact-form__consent input:checked {
+  background: var(--color-orange);
+  border-color: var(--color-orange);
+}
+
+.contact-form__consent input:checked::before {
+  background: var(--color-white);
+  transform: translateX(24px);
 }
 
 .contact-form__consent a {

@@ -26,6 +26,7 @@
 
 .tech-domains__title {
   margin: 0;
+  padding-inline: var(--space-5);
   font-family: var(--font-display);
   font-weight: 400;
   font-size: 32px;
@@ -34,6 +35,7 @@
 
 @media (min-width: 1024px) {
   .tech-domains__title {
+    padding-inline: 0;
     font-size: 56px;
   }
 }
