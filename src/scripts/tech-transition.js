@@ -75,7 +75,11 @@ function initSectionCover(lightSelector, darkSelector, darkRevealSelector) {
       spacer.style.height = "0px";
       dark.insertAdjacentElement("afterend", spacer);
 
+      let isActive = false;
       const setOverlay = (active) => {
+        if (active === isActive) return;
+        isActive = active;
+
         if (active) {
           spacer.style.height = darkNaturalHeight + "px";
           gsap.set(dark, {
@@ -94,8 +98,12 @@ function initSectionCover(lightSelector, darkSelector, darkRevealSelector) {
         // The spacer's height change shifts every section below it — without a refresh,
         // every other ScrollTrigger on the page (reveals included) keeps checking scroll
         // position against stale, pre-toggle thresholds, which is why content further down
-        // the page stopped animating once this ever fired.
-        ScrollTrigger.refresh();
+        // the page stopped animating once this ever fired. Deferred a frame because calling
+        // refresh() synchronously from inside a callback ScrollTrigger's own update cycle is
+        // already running (onEnter/onLeave) is re-entrant — it was intermittently leaving
+        // `dark` stuck with its overlay styles (permanently min-height:100vh) instead of
+        // cleanly settling back to its natural, content-driven height.
+        requestAnimationFrame(() => ScrollTrigger.refresh());
       };
 
       ScrollTrigger.create({
