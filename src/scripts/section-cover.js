@@ -80,15 +80,33 @@ function initSectionCover(pinnedSelector, coveringSelector, coveringRevealSelect
         isFrozen = active;
 
         if (active) {
-          // Capture pinned's current on-screen position and natural height fresh, right as it
-          // freezes — not cached once at page-load, which measured a shorter height before
-          // web fonts had finished swapping in and reserved too little space in the spacer,
-          // rendering `covering` too high for the whole freeze before snapping correct on
-          // release. The position itself holds exactly where it already was on screen — not
-          // some hardcoded top:0 — for the rest of the freeze.
-          const rect = pinned.getBoundingClientRect();
-          gsap.set(pinned, { position: "fixed", top: rect.top, left: 0, width: "100%" });
-          spacer.style.height = rect.height + "px";
+          // Height measured fresh every freeze, not cached once at page-load — caching once
+          // measured a shorter height before web fonts had finished swapping in, reserving
+          // too little space in the spacer for the rest of the page's life.
+          //
+          // top is computed directly (viewport height minus pinned's height) rather than
+          // read from pinned's current getBoundingClientRect() — that reads right for a
+          // forward entry (onEnter), where pinned is still sitting in its natural pre-freeze
+          // position, but is wrong by a full viewport-height for a backward entry
+          // (onEnterBack): scrolling up into the trigger from below, pinned's *current*
+          // natural position is already fully scrolled past (off-screen above the viewport,
+          // matching the state "covering" was fully covering it in), not the "bottom bottom"
+          // position the freeze needs. Freezing at that captured value put pinned off-screen
+          // for the entire backward freeze, which is what left covering's content rendering
+          // into a tall blank box instead of over a visible frozen section.
+          const height = pinned.offsetHeight;
+          const top = window.innerHeight - height;
+          // z-index:-1 while frozen, not just "no z-index" — negative z-index is guaranteed
+          // by spec to paint behind *all* normal (non-negative) content, so pinned can never
+          // visually sit above anything else on the page even if it ends up stuck fixed for
+          // longer than intended (a real, repeated WebKit-only failure mode for this file:
+          // the same peek-through symptom, fixed for its actual cause twice already, kept
+          // coming back specifically in Safari). Relying on implicit DOM-order stacking for a
+          // position:fixed element was the gap — this makes correct stacking structural
+          // instead of incidental, regardless of what's actually causing Safari's timing to
+          // differ.
+          gsap.set(pinned, { position: "fixed", top, left: 0, width: "100%", zIndex: -1 });
+          spacer.style.height = height + "px";
           revealCoveringContent();
           // No refresh here on purpose: pinned is still position:fixed at this point, so
           // ScrollTrigger.refresh() would re-measure *this same trigger's* own "bottom bottom"
@@ -97,7 +115,7 @@ function initSectionCover(pinnedSelector, coveringSelector, coveringRevealSelect
           // as it cascades through this trigger's own onEnter/onLeave. Refreshing only below,
           // once pinned is back in normal flow, avoids that entirely.
         } else {
-          gsap.set(pinned, { clearProps: "position,top,left,width" });
+          gsap.set(pinned, { clearProps: "position,top,left,width,zIndex" });
           spacer.style.height = "0px";
           // The spacer's height change shifts every section below it — without a refresh,
           // every other ScrollTrigger on the page keeps checking scroll position against
