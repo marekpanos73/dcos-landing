@@ -196,6 +196,29 @@ nothing about "mobile menu mode" can be a fixed media query elsewhere — see
 `mobile-menu.js`, which checks the toggle button's actual computed `display` instead of
 duplicating a breakpoint number.
 
+## Header nav "ghost" indicator: anchored to the header, not the nav, and scrollspy-driven
+
+The 4px sliding underline (`.site-nav__ghost` in [header.css](../src/styles/header.css),
+driven by `initNavGhost()`/`watchActiveSection()` in
+[header-nav.js](../src/scripts/header-nav.js)) is positioned against
+`.site-header__inner`'s bounding rect, not the `<nav>`'s. The nav is vertically centered
+inside a taller header row, so anchoring to the nav's own box would leave equal space above
+and below it; anchoring to the header keeps the bar flush with the header's bottom edge
+(matching the box-shadow divider) regardless of that centering.
+
+At rest (not hovered), the bar tracks scroll position via `watchActiveSection()`: a
+scrollspy that walks the nav links in DOM order and keeps the last one whose section has
+scrolled up past the sticky header's bottom edge — the standard technique, cheap enough for
+this page's handful of sections on every scroll event (rAF-throttled). Hovering/focusing a
+link overrides this immediately; leaving the nav returns the bar to the current scroll-based
+link, not always the first one.
+
+This only works for links whose `href="#id"` matches a real section id — the header/mobile
+"Blog" links used to be bare `href="#"` placeholders (unlike the footer's `href="#blog"`,
+which already pointed at `.blog-teaser`'s `id="blog"`), so the scrollspy silently skipped
+Blog and the bar stalled at Kariéra past that point. Fixed by pointing both nav copies at
+`#blog` to match. Any future nav link needs a matching section id for the same reason.
+
 ## Hero decorative layer: anchor everything the same way
 
 `.hero__ring` and `.hero__badge` (the "Slavíme 20 let" text + dotted cross) must stay

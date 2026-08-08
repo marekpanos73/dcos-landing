@@ -14,6 +14,7 @@
    row's content lines up with every other section's shared column at any viewport width —
    .site-header itself stays full-bleed (background, sticky) while this inner row caps. */
 .site-header__inner {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -87,6 +88,29 @@ body.nav-overflow .menu-toggle {
 
 .site-nav__list a:hover {
   color: var(--color-orange);
+}
+
+/* Sliding "ghost" indicator: tracks the hovered/focused nav link, anchored to the
+   header's own bottom edge (not the nav's box) so it stays flush with the header's
+   bottom border regardless of the nav being vertically centered within a taller header. */
+.site-nav__ghost {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 0;
+  height: var(--space-1);
+  background: var(--color-orange);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(0);
+  transition:
+    transform 0.35s var(--ease-out),
+    width 0.35s var(--ease-out),
+    opacity 0.25s var(--ease-out);
+}
+
+.site-nav__ghost.is-visible {
+  opacity: 1;
 }
 
 .menu-toggle {
