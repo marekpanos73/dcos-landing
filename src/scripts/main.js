@@ -13,7 +13,6 @@ import { initButtonLabels } from "./button-labels.js";
 import { initHeroShapeRotation } from "./hero-shape.js";
 import { initParallax } from "./parallax.js";
 import { initTechnologySectionTransition } from "./tech-transition.js";
-import { initLeadershipSection } from "./leadership-scroll.js";
 import { initTechnologyGrid } from "./tech-grid.js";
 
 initHeaderNav();
@@ -26,5 +25,4 @@ initButtonLabels();
 initHeroShapeRotation();
 initParallax();
 initTechnologySectionTransition();
-initLeadershipSection();
 initTechnologyGrid();

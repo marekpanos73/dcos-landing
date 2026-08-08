@@ -3,11 +3,13 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 gsap.registerPlugin(ScrollTrigger);
 
-// .value-tiles has its own richer assembly/cascade entrance — see tech-grid.js — so it's
-// deliberately excluded here to avoid two reveal systems animating the same elements.
+// .value-tiles has its own richer assembly/cascade entrance — see tech-grid.js. .area-tiles
+// reveals off the tech-domains cover transition itself (tech-transition.js) instead of a
+// scroll-position trigger — its ancestor's positioning mode toggles between static and fixed
+// mid-transition, which made a "top 85% of viewport" threshold meaningless. Both excluded
+// here to avoid two reveal systems fighting over the same elements.
 const REVEAL_GROUPS = [
   { group: ".section-top", items: null },
-  { group: ".area-tiles", items: ".area-tile" },
   { group: ".approach-tiles", items: ".approach-tile" },
   { group: ".leader-tiles", items: ".leader-tile" },
   { group: ".reference-tiles", items: ".reference-tile" },

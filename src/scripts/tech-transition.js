@@ -33,7 +33,7 @@ gsap.registerPlugin(ScrollTrigger);
  *   fixed→static handoff land with no jump — dark just sits fully covering, motionless, for
  *   that trailing viewport-height once the rise itself has already finished.
  */
-function initSectionCover(lightSelector, darkSelector) {
+function initSectionCover(lightSelector, darkSelector, darkRevealSelector) {
   const light = document.querySelector(lightSelector);
   const dark = document.querySelector(darkSelector);
   if (!light || !dark) return;
@@ -43,6 +43,27 @@ function initSectionCover(lightSelector, darkSelector) {
       const darkNaturalHeight = dark.offsetHeight;
       const hold = () => window.innerHeight;
       const overlaySpan = () => hold() + window.innerHeight;
+
+      // dark's own content can't use the generic scroll-position reveal (scroll-animations.js)
+      // — its "top 85% of viewport" threshold is meaningless once dark's ancestor toggles
+      // between static and fixed positioning mid-transition, which left it either stuck
+      // invisible or only revealing after extra back-and-forth scrolling. Firing it directly
+      // off the overlay engaging instead ties it to the moment it's actually about to become
+      // visible, regardless of how it's positioned.
+      const revealTargets = darkRevealSelector ? dark.querySelectorAll(darkRevealSelector) : null;
+      let revealed = false;
+      const revealDarkContent = () => {
+        if (!revealTargets || !revealTargets.length || revealed) return;
+        revealed = true;
+        gsap.from(revealTargets, {
+          opacity: 0,
+          y: 32,
+          duration: 0.7,
+          ease: "power3.out",
+          stagger: 0.08,
+          onComplete: () => gsap.set(revealTargets, { clearProps: "all" }),
+        });
+      };
 
       // Taking dark out of flow (position:fixed) needs the same flow compensation GSAP's
       // own pin already gives `light` — otherwise whatever comes after dark collapses
@@ -65,10 +86,16 @@ function initSectionCover(lightSelector, darkSelector) {
             minHeight: "100vh",
             zIndex: 2,
           });
+          revealDarkContent();
         } else {
           spacer.style.height = "0px";
           gsap.set(dark, { clearProps: "position,top,left,width,minHeight,zIndex,transform" });
         }
+        // The spacer's height change shifts every section below it — without a refresh,
+        // every other ScrollTrigger on the page (reveals included) keeps checking scroll
+        // position against stale, pre-toggle thresholds, which is why content further down
+        // the page stopped animating once this ever fired.
+        ScrollTrigger.refresh();
       };
 
       ScrollTrigger.create({
@@ -115,7 +142,7 @@ export function initTechnologySectionTransition() {
   const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
   if (reduceMotion) return;
 
-  initSectionCover(".what-we-do", ".tech-domains");
+  initSectionCover(".what-we-do", ".tech-domains", ".area-tile");
   // A second occurrence (.clients -> .career) was tried and pulled: verified numerically to
   // release with a large, unexplained position jump specific to that pair (not present on
   // the pair above, even after applying the same fixes) — root cause not yet found, see
