@@ -16,16 +16,22 @@ gsap.registerPlugin(ScrollTrigger);
  * enough relative to the viewport and to each other; with a shorter dark section it visibly
  * peeked/glitched once the pin released.
  *
- * Two ScrollTriggers share the same trigger/start but different `end`s, on purpose:
- * - The PIN's own (end - start) is `HOLD` — this is what GSAP's default pinSpacing:true
- *   reserves as extra space after the light section, which is also exactly how much further
- *   down the document the dark section's natural (unpinned) position gets pushed.
- * - The OVERLAY (the fixed/static toggle + the yPercent rise) needs to stay active for
- *   `HOLD + one viewport height`, not just `HOLD` — because a section immediately following
- *   a pinned+spaced element always needs one extra viewport-height of scroll before its own
- *   natural flow position lines up with the top of the viewport. Toggling back to normal
- *   flow exactly at that point (not at the pin's own, shorter end) is what makes the
- *   fixed→static handoff land with no jump.
+ * Three things share the same trigger/start but different `end`s, on purpose:
+ * - The RISE (dark's yPercent tween) finishes within `HOLD` — the light section must stay
+ *   visibly frozen for this whole stretch, otherwise it starts scrolling normally again
+ *   while dark is still only partway covering it, which reads as the light section
+ *   "escaping" out from under an unfinished cover.
+ * - The PIN's own (end - start) is also `HOLD`, for the same reason — this is what GSAP's
+ *   default pinSpacing:true reserves as extra space after the light section, which is also
+ *   exactly how much further down the document the dark section's natural (unpinned)
+ *   position gets pushed.
+ * - The OVERLAY (the fixed/static toggle) needs to stay active for `HOLD + one viewport
+ *   height`, not just `HOLD` — because a section immediately following a pinned+spaced
+ *   element always needs one extra viewport-height of scroll before its own natural flow
+ *   position lines up with the top of the viewport. Toggling back to normal flow exactly at
+ *   that point (not at the rise's or the pin's own, shorter end) is what makes the
+ *   fixed→static handoff land with no jump — dark just sits fully covering, motionless, for
+ *   that trailing viewport-height once the rise itself has already finished.
  */
 function initSectionCover(lightSelector, darkSelector) {
   const light = document.querySelector(lightSelector);
@@ -91,7 +97,7 @@ function initSectionCover(lightSelector, darkSelector) {
           scrollTrigger: {
             trigger: light,
             start: "bottom bottom",
-            end: () => "+=" + overlaySpan(),
+            end: () => "+=" + hold(),
             scrub: true,
           },
         },
