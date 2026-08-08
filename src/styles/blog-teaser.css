@@ -1,4 +1,5 @@
 .blog-teaser {
+  background: var(--color-white);
   padding-block: var(--space-10);
 }
 

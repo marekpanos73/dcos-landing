@@ -1,4 +1,5 @@
 .how-we-work {
+  background: var(--color-white);
   display: flex;
   flex-direction: column;
   gap: var(--space-10);

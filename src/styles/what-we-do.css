@@ -1,4 +1,9 @@
 .what-we-do {
+  /* Explicit rather than inherited from body — the tech-domains cover transition pins this
+     section, and a GSAP pin quirk left a stray inline transform on it that briefly rendered
+     it outside its normal document position; an explicit background stops that from ever
+     reading as a transparent gap over whatever's behind, regardless of positioning bugs. */
+  background: var(--color-white);
   display: flex;
   flex-direction: column;
   gap: var(--space-10);

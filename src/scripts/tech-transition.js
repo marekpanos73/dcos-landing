@@ -56,6 +56,13 @@ function initSectionCover(lightSelector, darkSelector, darkRevealSelector) {
         });
       };
 
+      // With pinSpacing:false, GSAP leaves a compensating inline transform on `light` after
+      // it unpins instead of cleanly resetting it — here specifically a permanently-stuck
+      // translateY of one viewport-height, which rendered light's bottom edge a full
+      // viewport-height below its true position, overlapping into whatever comes after dark.
+      // Clearing it on every unpin is what actually fixes that, not a workaround around it.
+      const clearLightTransform = () => gsap.set(light, { clearProps: "transform" });
+
       ScrollTrigger.create({
         trigger: light,
         start: "bottom bottom",
@@ -69,8 +76,14 @@ function initSectionCover(lightSelector, darkSelector, darkRevealSelector) {
         // stale, pre-toggle thresholds. Deferred a frame: calling refresh() synchronously
         // from inside a callback ScrollTrigger's own update cycle is still running is
         // re-entrant and intermittently corrupts layout instead of cleanly settling.
-        onLeave: () => requestAnimationFrame(() => ScrollTrigger.refresh()),
-        onLeaveBack: () => requestAnimationFrame(() => ScrollTrigger.refresh()),
+        onLeave: () => {
+          clearLightTransform();
+          requestAnimationFrame(() => ScrollTrigger.refresh());
+        },
+        onLeaveBack: () => {
+          clearLightTransform();
+          requestAnimationFrame(() => ScrollTrigger.refresh());
+        },
       });
     },
   });
