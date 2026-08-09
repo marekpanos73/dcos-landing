@@ -56,7 +56,7 @@
   padding-inline: var(--space-5);
   font-family: var(--font-display);
   font-weight: 400;
-  font-size: 32px;
+  font-size: calc(32px * var(--text-scale));
   line-height: 1.2;
   color: var(--color-blue);
 }
@@ -66,27 +66,27 @@
     padding-inline: 0;
     /* Stepped down from the full 56px until 1100px — see the matching comment on
        .section-heading__title in section-heading.css for why. */
-    font-size: 40px;
+    font-size: calc(40px * var(--text-scale));
   }
 }
 
 @media (min-width: 1100px) {
   .contact__title {
-    font-size: 56px;
+    font-size: calc(56px * var(--text-scale));
   }
 }
 
 .contact__lede {
   margin: 0;
   font-weight: var(--fw-light);
-  font-size: 20px;
+  font-size: calc(20px * var(--text-scale));
   line-height: 1.35;
   color: var(--color-grey);
 }
 
 @media (min-width: 900px) {
   .contact__lede {
-    font-size: 24px;
+    font-size: calc(24px * var(--text-scale));
   }
 }
 
@@ -102,7 +102,7 @@
 .contact__details dt {
   margin: 0 0 var(--space-2);
   font-weight: var(--fw-semibold);
-  font-size: 20px;
+  font-size: calc(20px * var(--text-scale));
   opacity: 0.6;
   color: var(--color-grey);
 }
@@ -110,7 +110,7 @@
 .contact__details dd {
   margin: 0;
   font-weight: var(--fw-light);
-  font-size: 24px;
+  font-size: calc(24px * var(--text-scale));
   line-height: 1.35;
   color: var(--color-grey);
 }

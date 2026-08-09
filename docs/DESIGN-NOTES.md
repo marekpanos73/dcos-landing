@@ -240,18 +240,39 @@ Fixed right/bottom offsets on both elements keep them locked together regardless
 
 The hero's `overflow` must stay `visible` (not `hidden`, which I'd originally added) —
 `.hero__ring` is designed to bleed down past the hero's own bottom edge into the Stats
-section below it (see next section). Horizontal bleed is still caught by `body`'s
-`overflow-x: hidden`, so this doesn't risk a horizontal scrollbar.
+section below it (see next section). Horizontal bleed is caught by `overflow-x: hidden` on
+`body` — **and, as of 2026-08-09, `html` too**, not just `body`. Body-only wasn't reliably
+clipping this on iPadOS Safari specifically: the ring's intentional right-edge bleed past
+the viewport was staying visible there, and the browser's layout viewport itself was
+observed expanding to fit it, widening the whole rendered page. Redundant on browsers where
+body-only was already sufficient, so there's no reason to ever drop either one.
 
-## Stats section: frosted, not solid — lets the hero ring bleed through
+## Stats section: solid, not frosted — backdrop-filter turned out unreliable (2026-08-09)
 
-Figma's Stats section uses `backdrop-blur` + a semi-transparent white "Lighten" layer,
-which only does anything visible if something sits behind it to blur — that something is
-the hero's orange ring, which overlaps into this section's geometry (see above). `.stats`
-in [stats.css](../src/styles/stats.css) is a semi-transparent light grey with
-`backdrop-filter: blur(...)`, not an opaque background, so the ring shows through here,
-softened. If `.hero`'s `overflow` ever goes back to `hidden`, this effect silently
-disappears — the two are a matched pair, change them together.
+Figma's Stats section originally called for `backdrop-blur` + a semi-transparent white
+"Lighten" layer, which only does anything visible if something sits behind it to blur —
+that something is the hero's orange ring, which overlaps into this section's geometry (see
+above). `.stats` in [stats.css](../src/styles/stats.css) shipped that way (semi-transparent
+`rgba(246,246,246,0.75)` + `backdrop-filter: blur(80px)`, both prefixed) for a while, and it
+genuinely worked in Safari (confirmed on iPadOS). But real cross-device QA found it silently
+not rendering at all in Chrome, on two unrelated machines (a Windows PC and a MacBook Air
+M2) — the backdrop just stayed unblurred, showing the ring's bottom edge as a sharp,
+distracting hard edge instead of a soft one. Likely cause, not independently confirmed since
+neither failing machine/browser was available to debug directly: `.hero` carries
+`isolation: isolate` (from `[data-line-pattern]`, see below), which creates its own stacking
+context; the ring bleeds out past `.hero`'s own box into `.stats`'s visual area, and content
+that overflows an isolated ancestor like that is a known rough edge for Chromium's
+backdrop-filter backdrop-sampling — plausible, but genuinely unverified here.
+
+Given that, and given `backdrop-filter` has no fallback at all for browsers that don't
+support it either (older browsers would show the same unblurred-ring problem, just for a
+different reason), the fix was to stop depending on it working: `.stats` is now a flat
+`#f6f6f6` (same grey already used for `.reference-tile`/`.approach-tile`/`.contact-form`
+backgrounds elsewhere), which hides the ring's bleed completely and correctly on every
+browser, unconditionally. This trades away the frosted "ring peeks through, softened" look
+from Figma — if backdrop-filter reliability across Chrome versions ever gets independently
+confirmed fixed, revisiting the frosted look would need to re-verify this isolation theory
+first, not just re-add the two `backdrop-filter` lines.
 
 ## Line pattern (/////) on dark-blue blocks
 
@@ -369,6 +390,31 @@ property (`circle at var(--glow-position, 82% 100%)`), which each block sets on 
 (bottom-left), `.who-we-are` 82% 50% (right edge, vertically centered), `.career` 18% 0%
 (top-left). `.site-footer` deliberately has no glow at all per Figma — it doesn't carry the
 `bg-navy--glow` class, just the plain `--gradient-navy` background.
+
+## Global type scale: `--text-scale`, applied per-declaration via `calc()` (2026-08-09)
+
+Real cross-device QA found the hero's CTAs and decorative ring sitting below the fold on
+common laptop viewports, and separately that buttons read as too small relative to body
+text at the sizes Figma specified. Rather than hand-picking new px values across every
+file, [tokens.css](../src/styles/tokens.css) defines `--text-scale` (`0.9` base/mobile,
+`0.85` from the existing `900px` content breakpoint), and every affected `font-size`
+declaration is written as `calc(Npx * var(--text-scale))` instead of a bare px value — one
+variable to retune instead of re-editing every file by hand, which matters here because
+both numbers are an explicit first pass the user expects to iterate on after another round
+of visual QA, not a final spec.
+
+**Deliberately exempted — do not wrap these in `calc(... * var(--text-scale))`:** the hero
+claim (`.hero__brand-line`/`--big`, hero.css), the "Slavíme 20 let" badge
+(`.hero__badge-label`/`-years`, cqw-based), the desktop nav and mobile menu
+(`.site-nav__list a` in header.css, all of mobile-menu.css), every button label (all of
+buttons.css, `.lang-switch__btn`), the footer tagline paragraph (`.site-footer__col p`, not
+`.site-footer__heading`), the Reference-card copy (`.reference-tile p`, clients.css), and
+everything inside the contact form itself (`.contact-form__field label`/`input`/`textarea`,
+`.contact-form__consent` — but *not* `.contact__title`/`.contact__lede`/`.contact__details`,
+which are the section's left info column, not the form, and do scale). The reasoning behind
+each exemption lives with the request, not here — if adding a new text element to one of
+these components, match its neighbors' exemption rather than assuming everything scales by
+default.
 
 ## Animation roadmap
 

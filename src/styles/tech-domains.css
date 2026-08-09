@@ -42,14 +42,14 @@
   padding-inline: var(--space-5);
   font-family: var(--font-display);
   font-weight: 400;
-  font-size: 32px;
+  font-size: calc(32px * var(--text-scale));
   line-height: 1.2;
 }
 
 @media (min-width: 900px) {
   .tech-domains__title {
     padding-inline: 0;
-    font-size: 56px;
+    font-size: calc(56px * var(--text-scale));
   }
 }
 
@@ -91,12 +91,12 @@
 .area-tile h3 {
   margin: 0;
   font-weight: var(--fw-semibold);
-  font-size: 28px;
+  font-size: calc(28px * var(--text-scale));
 }
 
 @media (min-width: 900px) {
   .area-tile h3 {
-    font-size: 32px;
+    font-size: calc(32px * var(--text-scale));
   }
 }
 
@@ -110,6 +110,6 @@
 .area-tile p {
   margin: 0;
   font-weight: var(--fw-light);
-  font-size: 20px;
+  font-size: calc(20px * var(--text-scale));
   line-height: 1.35;
 }

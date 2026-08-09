@@ -8,6 +8,11 @@ html,
 body {
   margin: 0;
   padding: 0;
+  /* Both, not just body: .hero__ring (hero.css) intentionally bleeds past the viewport's
+     right edge, and body-only overflow-x:hidden doesn't reliably clip that on iPadOS
+     Safari — the layout viewport itself was observed expanding to fit the unclipped ring,
+     widening the whole page. Redundant on browsers where body-only was already enough. */
+  overflow-x: hidden;
 }
 
 body {
@@ -16,7 +21,6 @@ body {
   color: var(--color-grey);
   background: var(--color-white);
   -webkit-font-smoothing: antialiased;
-  overflow-x: hidden;
 }
 
 img,

@@ -1,7 +1,7 @@
 .eyebrow {
   margin: 0;
   font-weight: var(--fw-semibold);
-  font-size: 24px;
+  font-size: calc(24px * var(--text-scale));
   letter-spacing: 0.2em;
   text-transform: uppercase;
   color: var(--color-blue);
@@ -32,7 +32,7 @@
   padding-inline: var(--space-5);
   font-family: var(--font-display);
   font-weight: 400;
-  font-size: 32px;
+  font-size: calc(32px * var(--text-scale));
   line-height: 1.2;
   color: var(--color-blue);
 }
@@ -51,7 +51,7 @@
 .section-heading__body p {
   margin: 0;
   font-weight: var(--fw-light);
-  font-size: 20px;
+  font-size: calc(20px * var(--text-scale));
   line-height: 1.35;
   color: var(--color-grey);
 }
@@ -85,7 +85,7 @@
        but looks rough as the *normal* rendering at a width this common. Stepping the font
        down here means it only needs that safety net in genuinely unusual cases (long
        untranslated brand names etc), not every render at this width. */
-    font-size: 40px;
+    font-size: calc(40px * var(--text-scale));
     /* Grid items default to min-width:auto (their content's min-content), not 0 — without
        this, the title's longest unbreakable word can force this column wider than its true
        1fr/50% share (especially at this large font size), pushing column 2 — and everything
@@ -107,13 +107,13 @@
   }
 
   .section-heading__body p {
-    font-size: 24px;
+    font-size: calc(24px * var(--text-scale));
   }
 }
 
 @media (min-width: 1100px) {
   .section-heading__title {
     padding-inline: 0 var(--space-6);
-    font-size: 56px;
+    font-size: calc(56px * var(--text-scale));
   }
 }

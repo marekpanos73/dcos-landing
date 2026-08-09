@@ -81,7 +81,7 @@
   padding-inline: var(--space-5);
   font-family: var(--font-display);
   font-weight: 400;
-  font-size: 32px;
+  font-size: calc(32px * var(--text-scale));
   line-height: 1.2;
 }
 
@@ -90,26 +90,26 @@
     padding-inline: 0;
     /* Stepped down from the full 56px until 1100px — see the matching comment on
        .section-heading__title in section-heading.css for why. */
-    font-size: 40px;
+    font-size: calc(40px * var(--text-scale));
   }
 }
 
 @media (min-width: 1100px) {
   .career__title {
-    font-size: 56px;
+    font-size: calc(56px * var(--text-scale));
   }
 }
 
 .career__text > p {
   margin: 0;
   font-weight: var(--fw-light);
-  font-size: 20px;
+  font-size: calc(20px * var(--text-scale));
   line-height: 1.35;
 }
 
 @media (min-width: 900px) {
   .career__text > p {
-    font-size: 24px;
+    font-size: calc(24px * var(--text-scale));
   }
 }
 

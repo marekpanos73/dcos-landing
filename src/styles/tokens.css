@@ -56,6 +56,26 @@
 
   /* Motion */
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* Global type-scale multiplier — applied via calc(Npx * var(--text-scale)) on every
+     font-size that isn't specifically exempted (hero claim, nav, button/input labels,
+     Reference-card copy, footer tagline, "Slavíme 20 let" badge — see each file). Added
+     because the hero's CTAs and decorative graphic were sitting below the fold on common
+     laptop viewports, and independently because buttons read as too small relative to body
+     text at 100%. Desktop is scaled down more than mobile deliberately (mobile text was
+     already tighter before this). Both values are a first pass — expect to retune the
+     exact percentage after another round of visual QA, that's why this is one variable
+     instead of hand-edited px values scattered across every file. */
+  --text-scale: 0.9;
+}
+
+/* This project's general content breakpoint (see DESIGN-NOTES.md) — not otherwise used in
+   this file, whose other tiers start at 1280px, but --text-scale needs to step down here
+   too since that's where most sections switch to their larger desktop font sizes. */
+@media (min-width: 900px) {
+  :root {
+    --text-scale: 0.85;
+  }
 }
 
 @media (min-width: 1280px) {

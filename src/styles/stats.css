@@ -1,11 +1,16 @@
 .stats {
-  /* Semi-transparent + blurred, not solid — the hero's orange ring is designed to bleed
-     up into this section (see .hero__ring's negative bottom offset) and show through
-     here, frosted, per Figma's backdrop-blur + white "Lighten" overlay treatment. */
+  /* Solid, not the semi-transparent + backdrop-blur Figma originally specified (which let
+     the hero's orange ring bleed up and show through here, frosted) — backdrop-filter
+     turned out unreliable in real-world testing: confirmed working in Safari (iPadOS) but
+     not rendering at all in Chrome on two separate machines (Windows PC, MacBook Air M2),
+     leaving the ring's bottom edge showing through unblurred and looking broken. Likely
+     cause is .hero's isolation:isolate (from [data-line-pattern], line-pattern.css) putting
+     the overflowing ring in a separate stacking context that Chromium's backdrop-filter
+     doesn't reliably sample across — not independently reproducible in this environment to
+     fix at the root, so solid wins: it hides the ring bleed correctly everywhere,
+     including browsers without backdrop-filter support at all. */
   position: relative;
-  background: rgba(246, 246, 246, 0.75);
-  backdrop-filter: blur(80px);
-  -webkit-backdrop-filter: blur(80px);
+  background: #f6f6f6;
   padding-block: var(--space-10);
 }
 
@@ -31,7 +36,7 @@
 .stats__caption {
   margin: 0;
   font-weight: var(--fw-semibold);
-  font-size: 24px;
+  font-size: calc(24px * var(--text-scale));
   text-align: center;
   letter-spacing: 0.2em;
   text-transform: uppercase;

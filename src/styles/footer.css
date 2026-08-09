@@ -75,7 +75,7 @@
 }
 
 .site-footer__col p.site-footer__heading {
-  font-size: 18px;
+  font-size: calc(18px * var(--text-scale));
   letter-spacing: 0.05em;
 }
 
@@ -97,6 +97,7 @@
   font-weight: var(--fw-semibold);
   font-size: 18px;
   cursor: pointer;
+  transition: background-color 0.2s var(--ease-out);
 }
 
 .lang-switch__btn.is-active {
@@ -104,8 +105,16 @@
   opacity: 1;
 }
 
-.lang-switch__btn:disabled {
+/* aria-disabled, not the native disabled attribute — a native disabled button never
+   receives pointer events in any browser, which meant :hover could never match at all.
+   This keeps the language switch visually/semantically inert (not yet wired to anything)
+   while still giving it the same hover affordance as the LinkedIn icon below it. */
+.lang-switch__btn[aria-disabled="true"] {
   cursor: not-allowed;
+}
+
+.lang-switch__btn:not(.is-active):hover {
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .site-footer__links {
@@ -118,7 +127,7 @@
 .site-footer__links a {
   padding-block: var(--space-2);
   font-weight: var(--fw-light);
-  font-size: 20px;
+  font-size: calc(20px * var(--text-scale));
   opacity: 0.6;
   transition: opacity 0.2s var(--ease-out);
 }
@@ -138,7 +147,7 @@
 .site-footer__bottom p {
   margin: 0;
   font-weight: var(--fw-light);
-  font-size: 18px;
+  font-size: calc(18px * var(--text-scale));
 }
 
 .site-footer__ln {
