@@ -304,24 +304,40 @@ of the Figma reference, so a `top: 44%`-style anchor drifts away from the ring (
 itself bottom-anchored) any time the rendered hero height differs from that reference.
 Fixed right/bottom offsets on both elements keep them locked together regardless.
 
-The hero's `overflow` must stay `visible` (not `hidden`, which I'd originally added) —
-`.hero__ring` is designed to bleed down past the hero's own bottom edge into the Stats
-section below it (see next section). Horizontal bleed is caught by `overflow-x: hidden` on
-`body`.
+`.hero`'s overflow is split per axis, not one `overflow: visible` (what this used to be):
+`overflow-y: visible` — required, `.hero__ring` is designed to bleed down past `.hero`'s own
+bottom edge into the Stats section below it (see next section), and clipping this axis at
+all breaks that. `overflow-x: clip` — added 2026-08-09 to actually fix a reported iPadOS
+Safari bug where the ring's right-edge bleed (past `.hero`'s own right edge, which already
+sits at the viewport's edge since `.hero` has no `padding-inline`) wasn't being reliably
+clipped by `body`'s `overflow-x: hidden` alone, letting the browser's layout viewport expand
+to fit it and widen the whole page.
 
-**Do not also add `overflow-x: hidden` (or `clip`) to `html`/`documentElement`, even though
-that was tried once (2026-08-09) for a reported iPadOS Safari overflow bug where body-only
-apparently wasn't clipping the ring's right-edge bleed reliably.** It was reverted the same
-day: `html` is the real root scroller (`document.scrollingElement`), and giving it its own
-non-`visible` `overflow-x` value — confirmed for both `hidden` and `clip` — turns it into a
-distinct scroll container and breaks `position: sticky` on `.site-header` (and would break
-it for any other sticky element on the page). Verified directly: with the rule in place, the
-header's `getBoundingClientRect().top` tracked scroll position 1:1 (scrolled away) instead
-of staying pinned at `0`. A universally broken sticky header is a far worse trade than one
-unresolved device-specific layout-width edge case. If the iPadOS Safari bug needs
-revisiting, it needs an approach that doesn't touch `html`'s own `overflow` property —
-e.g. scoping the clip to a wrapper element other than `html`/`body`, or constraining the
-ring's own bleed distance instead of relying on ancestor clipping.
+**Two things make `overflow-x: clip` specifically the right tool here, not `hidden`:**
+1. **It doesn't force the other axis to `auto`.** Per spec, pairing a non-`visible`
+   `overflow-x` with a `visible` `overflow-y` normally promotes the visible one to `auto` —
+   which single-axis-`hidden` would have done here too, silently clipping the vertical Stats
+   bleed this section depends on. `clip` is exempt from that pairing rule (verified directly:
+   setting only `overflow-x: clip` left `overflow-y`'s *computed* value as genuinely
+   `visible`, not `auto`) — the one CSS overflow value that lets one axis clip and the other
+   stay truly unclipped on the same element.
+2. **It doesn't need to touch `html`.** An earlier attempt at this exact bug added
+   `overflow-x: hidden` to `html`/`documentElement` directly, on the theory that `body`-only
+   wasn't reliably propagating to clip the real viewport on iPadOS Safari. That broke
+   `position: sticky` on `.site-header` instead — `html` is the real root scroller
+   (`document.scrollingElement`), and any non-`visible` `overflow-x` on it (confirmed for both
+   `hidden` and `clip`) turns it into its own distinct scroll container, which breaks sticky
+   positioning for descendants regardless of whether that container ever visually scrolls.
+   Clipping at `.hero` itself sidesteps this category of bug entirely: `.hero` is a **sibling**
+   of `.site-header` (see index.html — the header and `<main>`, which contains `.hero`, are
+   both direct children of `body`), never its ancestor, so nothing set on `.hero` can affect
+   the header's containing-block resolution no matter which overflow value is used.
+
+`overflow: clip` needs Safari 16+ — a non-issue for the M2 iPad this was reported on (M2
+shipped with iPadOS 16 as its floor), and a no-op fallback (no extra protection, not a
+regression) on anything older that doesn't support it. `body`'s own `overflow-x: hidden`
+stays as-is, unrelated and still doing its job as the first line of defense; this is an
+additional, more targeted one specifically for the ring's known bleed source.
 
 ## Stats section: solid, not frosted — backdrop-filter turned out unreliable (2026-08-09)
 

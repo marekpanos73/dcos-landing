@@ -2,10 +2,30 @@
   position: relative;
   /* Glow center per Figma: bottom-right, under the "Slavíme 20 let" badge. */
   --glow-position: 82% 100%;
-  /* Not clipped: the ring (.hero__ring) is designed to bleed past the hero's own bottom
-     edge into the Stats section below, per Figma. Horizontal overflow is still caught by
-     body's overflow-x:hidden. */
-  overflow: visible;
+  /* Split per-axis, not a single `overflow: visible` (what this used to be) — the ring
+     (.hero__ring) is designed to bleed past .hero's own BOTTOM edge into the Stats section
+     below, per Figma, so overflow-y must stay visible (no clipping). Horizontally though,
+     the ring also bleeds past .hero's RIGHT edge (already at the viewport's edge, since
+     .hero has no padding-inline) — body's overflow-x:hidden is supposed to catch that, but
+     wasn't reliably clipping it on iPadOS Safari specifically, letting the browser's layout
+     viewport expand to fit the ring and widen the whole page. Adding overflow-x:hidden here
+     directly was tried, but per spec that forces overflow-y to auto too (any non-visible
+     overflow-x pairs with a visible overflow-y by promoting it to auto), which would have
+     silently clipped the vertical bleed into Stats.
+     overflow-x: clip is the one value exempt from that pairing rule (confirmed: pairing it
+     with overflow-y: visible leaves the vertical axis genuinely uncapped, not auto) — so it
+     clips the ring at .hero's own right edge (same as where it was already invisible in
+     every browser that clips correctly) without touching overflow-y at all. Safe re: the
+     header's `position: sticky` too, for a different reason: .hero is a sibling of
+     .site-header (see index.html — both are direct children of body under different
+     wrappers), never its ancestor, so nothing set here can affect sticky's containing-block
+     resolution regardless of clip/hidden/whatever — that's a lesson from the html-level
+     attempt at this same bug (DESIGN-NOTES.md), which broke sticky specifically because it
+     touched an actual ANCESTOR of the header. `overflow: clip` needs Safari 16+ — fine for
+     the M2 iPad this was reported on (M2 shipped with iPadOS 16 as its minimum), and a
+     no-op fallback (page just isn't extra-protected) on anything older, never a regression. */
+  overflow-x: clip;
+  overflow-y: visible;
   background: var(--gradient-navy);
   padding-block: var(--space-9) var(--space-13);
   /* No padding-inline here on purpose — see .hero__content's margin-inline-start below.
