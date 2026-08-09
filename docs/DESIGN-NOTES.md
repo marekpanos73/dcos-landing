@@ -307,11 +307,21 @@ Fixed right/bottom offsets on both elements keep them locked together regardless
 The hero's `overflow` must stay `visible` (not `hidden`, which I'd originally added) —
 `.hero__ring` is designed to bleed down past the hero's own bottom edge into the Stats
 section below it (see next section). Horizontal bleed is caught by `overflow-x: hidden` on
-`body` — **and, as of 2026-08-09, `html` too**, not just `body`. Body-only wasn't reliably
-clipping this on iPadOS Safari specifically: the ring's intentional right-edge bleed past
-the viewport was staying visible there, and the browser's layout viewport itself was
-observed expanding to fit it, widening the whole rendered page. Redundant on browsers where
-body-only was already sufficient, so there's no reason to ever drop either one.
+`body`.
+
+**Do not also add `overflow-x: hidden` (or `clip`) to `html`/`documentElement`, even though
+that was tried once (2026-08-09) for a reported iPadOS Safari overflow bug where body-only
+apparently wasn't clipping the ring's right-edge bleed reliably.** It was reverted the same
+day: `html` is the real root scroller (`document.scrollingElement`), and giving it its own
+non-`visible` `overflow-x` value — confirmed for both `hidden` and `clip` — turns it into a
+distinct scroll container and breaks `position: sticky` on `.site-header` (and would break
+it for any other sticky element on the page). Verified directly: with the rule in place, the
+header's `getBoundingClientRect().top` tracked scroll position 1:1 (scrolled away) instead
+of staying pinned at `0`. A universally broken sticky header is a far worse trade than one
+unresolved device-specific layout-width edge case. If the iPadOS Safari bug needs
+revisiting, it needs an approach that doesn't touch `html`'s own `overflow` property —
+e.g. scoping the clip to a wrapper element other than `html`/`body`, or constraining the
+ring's own bleed distance instead of relying on ancestor clipping.
 
 ## Stats section: solid, not frosted — backdrop-filter turned out unreliable (2026-08-09)
 

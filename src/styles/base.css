@@ -8,11 +8,6 @@ html,
 body {
   margin: 0;
   padding: 0;
-  /* Both, not just body: .hero__ring (hero.css) intentionally bleeds past the viewport's
-     right edge, and body-only overflow-x:hidden doesn't reliably clip that on iPadOS
-     Safari — the layout viewport itself was observed expanding to fit the unclipped ring,
-     widening the whole page. Redundant on browsers where body-only was already enough. */
-  overflow-x: hidden;
 }
 
 body {
@@ -21,6 +16,18 @@ body {
   color: var(--color-grey);
   background: var(--color-white);
   -webkit-font-smoothing: antialiased;
+  /* html, not just body, was tried here (2026-08-09, for a reported iPadOS Safari overflow
+     bug — .hero__ring intentionally bleeds past the viewport's right edge) and reverted the
+     same day: ANY non-visible overflow-x on `html` — confirmed both `hidden` and `clip` —
+     breaks `position: sticky` on .site-header. html is the real root scroller
+     (document.scrollingElement); giving it its own overflow value turns it into a distinct
+     scroll container, and sticky descendants stop sticking (verified directly: header's
+     rect.top tracked scroll position 1:1 instead of staying pinned at 0). A universally
+     broken sticky header is a far worse trade than one unresolved iPadOS-Safari-specific
+     layout-width edge case — if that bug needs revisiting, it needs a fix that doesn't touch
+     html's own overflow property (e.g. scoped to a wrapper other than html, or constraining
+     the bleed itself) — don't just re-add this. */
+  overflow-x: hidden;
 }
 
 img,
