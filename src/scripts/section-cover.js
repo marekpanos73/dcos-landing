@@ -94,8 +94,22 @@ function initSectionCover(pinnedSelector, coveringSelector, coveringRevealSelect
           // position the freeze needs. Freezing at that captured value put pinned off-screen
           // for the entire backward freeze, which is what left covering's content rendering
           // into a tall blank box instead of over a visible frozen section.
-          const height = pinned.offsetHeight;
+          const rect = pinned.getBoundingClientRect();
+          const height = rect.height;
           const top = window.innerHeight - height;
+          // left/width captured from the live rect too, not left:0/width:"100%" (an earlier
+          // version of this code) — those resolve against position:fixed's own containing
+          // block (the viewport rectangle), which is not guaranteed to equal pinned's actual
+          // current in-flow width. The two differ by exactly a vertical scrollbar's gutter
+          // width on setups where the scrollbar reserves layout space instead of overlaying
+          // content (classic "always show scrollbars" behavior, or a mouse-driven session on
+          // some macOS/Safari configurations) — engaging the freeze would then snap pinned
+          // sideways by that gutter width, and releasing it would snap back, since unlike
+          // `top` this has no direction-dependent trap (the page never scrolls horizontally —
+          // overflow-x:hidden on html/body, base.css), so reading it live is safe. Capturing
+          // both from the same rect as height keeps all three consistent with one measurement.
+          const left = rect.left;
+          const width = rect.width;
           // z-index:-1 while frozen, not just "no z-index" — negative z-index is guaranteed
           // by spec to paint behind *all* normal (non-negative) content, so pinned can never
           // visually sit above anything else on the page even if it ends up stuck fixed for
@@ -105,7 +119,7 @@ function initSectionCover(pinnedSelector, coveringSelector, coveringRevealSelect
           // position:fixed element was the gap — this makes correct stacking structural
           // instead of incidental, regardless of what's actually causing Safari's timing to
           // differ.
-          gsap.set(pinned, { position: "fixed", top, left: 0, width: "100%", zIndex: -1 });
+          gsap.set(pinned, { position: "fixed", top, left, width, zIndex: -1 });
           spacer.style.height = height + "px";
           revealCoveringContent();
           // No refresh here on purpose: pinned is still position:fixed at this point, so

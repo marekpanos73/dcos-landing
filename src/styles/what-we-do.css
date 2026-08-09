@@ -29,6 +29,17 @@
 }
 
 .value-tile {
+  /* Centered, not top-anchored — every tile shares its row's height with its siblings
+     (equal-height grid rows / .value-tiles's shared bottom border), but the 5 tiles' copy
+     lengths differ (1 vs 2-line titles, uneven paragraph wraps), and row 2's height is
+     additionally driven by the much-taller image tile next to it. Top-anchoring left short
+     tiles (e.g. "Data & Insights") with a large, lopsided gap under their last line before
+     the divider — centering distributes that leftover space evenly above/below instead, so
+     every tile reads as intentionally, consistently padded regardless of its own copy
+     length or which sibling happens to be tallest. */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
   padding: var(--space-5);
   border-bottom: 1px solid rgba(35, 35, 35, 0.15);
 }
@@ -86,6 +97,9 @@
   height: 100%;
   aspect-ratio: 390 / 434;
   object-fit: cover;
+  /* Default center crop was cutting into the two men's heads at this aspect ratio — biasing
+     the crop to the top keeps their heads fully in frame and trims from the bottom instead. */
+  object-position: top;
   transition: transform 0.5s var(--ease-out);
 }
 

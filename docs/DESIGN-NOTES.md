@@ -49,6 +49,46 @@ because it's a plausible-sounding mechanism; verify against the actual reported 
 Do the same for any new entrance/reveal animation added later, especially anything that
 wraps a button, link, or other element a user will actually interact with.
 
+## Gotcha: `body`'s own `overflow-x: hidden` reserves a phantom scrollbar gutter, breaking `position:fixed; width:"100%"` (2026-08-09)
+
+[section-cover.js](../src/scripts/section-cover.js) (the pinned/covering transition — see
+its own file-header comment for the full mechanism) used to freeze `pinned` with
+`left: 0, width: "100%"`. Reported symptom: a small **horizontal** jump exactly when the
+freeze engages/releases — on a MacBook Air's external monitor in Safari, but not on a Mac
+Mini even at the same viewport width, which pointed away from a pure breakpoint/width bug
+and toward something environment-dependent.
+
+Root cause, confirmed by direct measurement (not just theorized): `body` has always had
+`overflow-x: hidden` (base.css) — CSS spec forces `overflow-y` from its default `visible` to
+`auto` whenever `overflow-x` is anything else, so `body` silently became its own (redundant)
+vertical-scroll container, even though `html`/`documentElement` is the actual page scroller.
+`body.clientWidth` measurably subtracts a scrollbar gutter for this phantom, self-referential
+scrollbar in browsers/scrollbar-render-modes that reserve layout space for `overflow:auto`
+regardless of whether a scrollbar is visibly drawn — confirmed in this repo's own dev
+environment: `body.clientWidth` (1698px) was 15px narrower than `documentElement.clientWidth`
+(1713px) at the same viewport width. Normal-flow content (`.what-we-do`, any full-bleed
+section) renders at `body.clientWidth`, but `position:fixed`'s `width: "100%"` resolves
+against the *initial containing block* (viewport-relative), which ignores `body`'s phantom
+gutter entirely — a guaranteed pixel mismatch between the section's in-flow width and its
+frozen width, in either direction depending on freeze/release. Whether this actually reserves
+visible space is scrollbar-style-dependent (classic reserved-space scrollbars vs. overlay
+scrollbars that take no layout width), which is exactly why it reproduced on one machine and
+not the other at any width — it depends on OS/Safari scrollbar rendering mode, not viewport
+size.
+
+**Fix:** capture `left`/`width` from `pinned.getBoundingClientRect()` at the moment the
+freeze engages (same call already measuring `height`) and set those as explicit pixel values
+instead of `left: 0, width: "100%"` — guarantees the frozen state matches the in-flow state
+exactly, regardless of *why* they might otherwise differ. Verified in this repo's dev
+environment: freezing now measurably applies `width: 1698px` (matching `body.clientWidth`),
+not `100%`/`1728px` (`window.innerWidth`). This is the same principle already applied to
+`top` in that file (compute from a real measurement, never assume viewport
+percentages/constants match normal flow) — now applied to the horizontal axis too.
+
+**This same phantom-gutter effect applies to any other `position:fixed; width:"100%"` (or
+`left/right: 0`) element on this page** — worth checking if a new one is ever added, not
+just this file.
+
 ## Two-column content rows share one grid — and one gap
 
 Every two-column row on the page (`.section-heading`, `.career__content`,
