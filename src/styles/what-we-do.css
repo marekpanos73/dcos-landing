@@ -95,6 +95,9 @@
 .value-tile--image img {
   width: 100%;
   height: 100%;
+  /* Mobile only (overridden to fill its grid row instead, at 900px below) — .value-tiles is
+     a single column here, so this tile has no row siblings to take a height from; it needs
+     its own intrinsic aspect ratio or its row would collapse to 0. */
   aspect-ratio: 390 / 434;
   object-fit: cover;
   /* Default center crop was cutting into the two men's heads at this aspect ratio — biasing
@@ -143,7 +146,18 @@
   }
 
   .value-tile--image {
+    /* From here up, this tile always shares its grid row with at least one text tile (2-col:
+       paired with 05; 3-col: paired with 04 and 05) — letting the image keep its own
+       intrinsic aspect-ratio (like it does on mobile, where it's alone in a single-column
+       row) forced that row's height, which grows a lot on wide viewports since aspect-ratio
+       scales the image's height with the column's width. That left the text tiles sharing
+       the row with a large, useless empty gap regardless of how their own content is
+       vertically distributed. Switching the image to position:absolute removes it from this
+       tile's own intrinsic sizing entirely, so the tile (and therefore the row) is sized by
+       its text siblings' actual content instead — the image just fills whatever height that
+       turns out to be. */
     padding: 0;
+    position: relative;
   }
 
   .value-tile__title {
@@ -151,7 +165,9 @@
   }
 
   .value-tile--image img {
-    aspect-ratio: 416 / 528;
+    position: absolute;
+    inset: 0;
+    aspect-ratio: auto;
   }
 }
 

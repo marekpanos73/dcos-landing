@@ -148,6 +148,32 @@ width, gap, or min-width value that merely "looks aligned" at the width you happ
 testing, and if a tier needs more than min-width:0 + overflow-wrap to look right, an extra
 column-count or font-size step (like the ones above) is the answer, not fighting the text.
 
+- **A grid row whose height is dictated by an unrelated image tile.** `.value-tiles`
+  ("Řešení") mixes 5 text tiles with 1 photo tile in the same grid; from 900px up the photo
+  always shares a row with at least one text tile (2-col: paired with tile 05; 3-col: paired
+  with 04 and 05). The photo (`.value-tile--image img`) originally kept its own
+  `aspect-ratio`, which scales its height with the column's width — on a wide viewport that
+  forced the whole row much taller than the text tiles actually needed, leaving a large,
+  reported-as-a-bug empty gap in 04/05 regardless of how their own content was vertically
+  distributed (see the `.value-tile` centering below — centering only fixed the gap being
+  *lopsided*, not its *size*, since the size was never a text-tile problem to begin with).
+  Fixed by removing the image's `aspect-ratio` from 900px up and switching it to
+  `position: absolute; inset: 0` instead — this takes it out of its own tile's intrinsic
+  sizing entirely, so the tile (and therefore the row) is sized by its text siblings' actual
+  content, and the image just fills whatever height that turns out to be via
+  `object-fit: cover`. Mobile keeps the original `aspect-ratio` approach — `.value-tiles` is
+  a single column there, so the image tile has no row sibling to take a height from and
+  would collapse to 0 without its own intrinsic size. **General rule: before giving an image
+  its own `aspect-ratio` inside a grid row it shares with text content, check whether that
+  row has text siblings at every tier the image tile does — if so, the image will dictate
+  the row's height instead of adapting to it, which usually isn't the intent.**
+
+`.value-tile` itself is `display: flex; flex-direction: column; justify-content: center`
+(was top-anchored) so each tile's own leftover vertical space — after the row-height fix
+above, no longer huge, but still real, since tiles' copy lengths differ — splits evenly
+above/below its content instead of collecting entirely below the last line before the
+divider.
+
 ## Gotcha: forced dark mode repainting the page
 
 `body` must have an explicit `background`, and `:root` must declare `color-scheme: light`
