@@ -179,12 +179,17 @@
 /* Ring + badge sized as cqw fractions of .hero's own content-box width (container-type:
    inline-size, set above), same technique the 900px block below uses — keeps them
    proportional at any mobile width instead of a fixed px size that under/overflows at the
-   extremes. No bleed here (unlike desktop's ring, which deliberately overflows .hero's
-   edges) — mobile keeps the whole graphic inside its own box, since there's no adjacent
-   content on this narrow layout for it to bleed toward. */
+   extremes. 120cqw deliberately exceeds 100% — per client request, the graphic bleeds past
+   .hero's left/right edges same as desktop's ring does (clipped there by .hero's own
+   overflow-x: clip, above), rather than being shrunk to fit inside the viewport. */
 .hero__ring {
   position: relative;
-  width: 70cqw;
+  /* flex-shrink:0 — .hero__decor is a flex container (for the mobile reorder above), and
+     without this a flex item's specified width is only a flex-basis, which the default
+     flex-shrink:1 was silently squashing back down to fit .hero__decor's own (100cqw) box,
+     capping the ring at 100cqw regardless of this value. */
+  flex-shrink: 0;
+  width: 120cqw;
   aspect-ratio: 943 / 947;
   background: url("./../assets/icons/badge-ring.svg") no-repeat center / contain;
 }
@@ -194,9 +199,9 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  /* 26.6cqw keeps the badge:ring size ratio identical to the desktop pair below
-     (20.72/54.58 of ring width), just recomputed against this 70cqw ring. */
-  width: 26.6cqw;
+  /* 45.6cqw keeps the badge:ring size ratio identical to the desktop pair below
+     (20.72/54.58 of ring width), just recomputed against this 120cqw ring. */
+  width: 45.6cqw;
   aspect-ratio: 358 / 355.6;
   display: grid;
   align-content: center;
@@ -217,8 +222,8 @@
   margin: 0;
   font-weight: var(--fw-semibold);
   /* Same label:ring font ratio as the desktop 2.78cqw/54.58cqw pair, recomputed against
-     this 70cqw ring so the label scales with the badge instead of the viewport directly. */
-  font-size: 3.57cqw;
+     this 120cqw ring so the label scales with the badge instead of the viewport directly. */
+  font-size: 6.12cqw;
 }
 
 .hero__badge-years {
@@ -228,7 +233,7 @@
   color: var(--color-orange);
   /* Same years:ring font ratio as the desktop 3.88cqw/54.58cqw pair — see .hero__badge-label
      above. */
-  font-size: 4.98cqw;
+  font-size: 8.54cqw;
 }
 
 /* The generic [data-line-pattern] > * rule (line-pattern.css) sets position:relative on
