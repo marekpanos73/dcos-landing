@@ -66,8 +66,15 @@ function initSectionCover(pinnedSelector, coveringSelector, coveringRevealSelect
 
   gsap.set(covering, { position: "relative", zIndex: 2 });
 
+  // Was gated to "(min-width: 900px)" — no stated reason found (in this file or
+  // DESIGN-NOTES.md) for excluding mobile specifically; the mechanism itself (position:fixed
+  // freeze + manual spacer) isn't desktop-specific. Switched to "all" so it also runs below
+  // 900px. The one known mobile-specific risk: `top` and the pin's `end` distance are both
+  // computed off `window.innerHeight`, which can change mid-scroll on browsers with a
+  // collapsing address bar (mobile Safari) — untested on a real device in this session, see
+  // project memory re: real-device QA.
   ScrollTrigger.matchMedia({
-    "(min-width: 900px)": function () {
+    all: function () {
       // covering's own content can't use the generic scroll-position reveal
       // (scroll-animations.js) — by the time it would fire, covering may already be fully
       // visible (held there by the freeze well past its own natural "top 85%" point), so it

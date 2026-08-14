@@ -14,6 +14,13 @@
   padding: 0 var(--space-4) var(--space-4);
   background: linear-gradient(to top, rgba(5, 20, 50, 0.85), rgba(10, 25, 60, 0.85));
   backdrop-filter: blur(24px);
+  /* Without its own scroll container, content taller than the viewport (e.g. landscape
+     phones, where header height eats a large share of the short viewport) just overflowed
+     the fixed box invisibly — nothing to scroll, so a touch-scroll gesture over the panel
+     fell through to the page underneath instead. overscroll-behavior:contain stops that
+     fallthrough at the panel's own scroll boundary once it *can* scroll. */
+  overflow-y: auto;
+  overscroll-behavior: contain;
   opacity: 0;
   /* Closed state is opacity:0, not display:none (that's what the transition animates) —
      without this, the panel is still a full-viewport (below the header) fixed layer that

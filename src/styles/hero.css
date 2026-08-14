@@ -149,31 +149,104 @@
   }
 }
 
-.hero__decor {
-  display: none;
+/* Mobile (below 900px, no Figma frame for this element — see DESIGN-NOTES.md): shown
+   in-flow under the CTA buttons rather than as the desktop's absolute bottom-right overlay,
+   per client request. .hero switches to a column flex so .hero__decor (first in DOM, for
+   the desktop paint-order reasons in the 900px block below) can be visually reordered after
+   .hero__container without moving it in the DOM — the line-pattern canvas (also a direct
+   child, prepended by line-pattern.js) stays position:absolute so this doesn't affect it. */
+.hero {
+  display: flex;
+  flex-direction: column;
 }
 
-/* The generic [data-line-pattern] > * rule (line-pattern.css) sets position:relative on
-   every direct child of .hero, including this one, so it can stack above the canvas.
-   That turns .hero__decor itself into the containing block for .hero__ring/.hero__badge
-   below, instead of .hero — pushing both out of position. Overriding to position:absolute
-   + inset:0 makes .hero__decor span .hero's box exactly, so their right/bottom offsets
-   resolve the same as if they were positioned directly against .hero. The extra
-   [data-line-pattern] in this selector isn't decorative — it's needed to outweigh that
-   rule's specificity so this override reliably wins regardless of CSS import order. */
-.hero[data-line-pattern] > .hero__decor {
-  position: absolute;
-  inset: 0;
+.hero__container {
+  order: 1;
+}
+
+.hero__decor {
+  order: 2;
+  display: flex;
+  justify-content: center;
+  /* Own centering, not .hero__container's — .hero__container has inline padding, which
+     would offset this off the true viewport center. .hero itself has none, so a full-width
+     flex child here centers its content on the viewport, per the "cross center = viewport
+     center" request. */
+  margin-top: var(--space-8);
   pointer-events: none;
 }
 
-/* Shown from 900px — matches the general content breakpoint. Below the 1280px this used
-   to require, the ring/badge are still visible, just scaled down (see cqw values below);
-   testing showed the scaled-down size clears the text column and buttons fine even at
-   900px, so a hard cutoff isn't needed as long as the scaling is right. */
+/* Ring + badge sized as cqw fractions of .hero's own content-box width (container-type:
+   inline-size, set above), same technique the 900px block below uses — keeps them
+   proportional at any mobile width instead of a fixed px size that under/overflows at the
+   extremes. No bleed here (unlike desktop's ring, which deliberately overflows .hero's
+   edges) — mobile keeps the whole graphic inside its own box, since there's no adjacent
+   content on this narrow layout for it to bleed toward. */
+.hero__ring {
+  position: relative;
+  width: 70cqw;
+  aspect-ratio: 943 / 947;
+  background: url("./../assets/icons/badge-ring.svg") no-repeat center / contain;
+}
+
+.hero__badge {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  /* 26.6cqw keeps the badge:ring size ratio identical to the desktop pair below
+     (20.72/54.58 of ring width), just recomputed against this 70cqw ring. */
+  width: 26.6cqw;
+  aspect-ratio: 358 / 355.6;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  text-align: center;
+  color: var(--color-white);
+}
+
+.hero__badge-cross {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.hero__badge-label {
+  position: relative;
+  margin: 0;
+  font-weight: var(--fw-semibold);
+  /* Same label:ring font ratio as the desktop 2.78cqw/54.58cqw pair, recomputed against
+     this 70cqw ring so the label scales with the badge instead of the viewport directly. */
+  font-size: 3.57cqw;
+}
+
+.hero__badge-years {
+  position: relative;
+  margin: 0;
+  font-family: var(--font-display);
+  color: var(--color-orange);
+  /* Same years:ring font ratio as the desktop 3.88cqw/54.58cqw pair — see .hero__badge-label
+     above. */
+  font-size: 4.98cqw;
+}
+
+/* The generic [data-line-pattern] > * rule (line-pattern.css) sets position:relative on
+   every direct child of .hero, including .hero__decor — that's exactly what the mobile
+   rules above rely on for .hero__badge's absolute-centering context, so it's left alone
+   below 900px. From 900px, .hero__decor instead needs to span .hero's own box so
+   .hero__ring/.hero__badge's right/bottom offsets resolve against .hero, not their own
+   shrunk-to-content box — the override below (position:absolute + inset:0) restores that.
+   The extra [data-line-pattern] in the selector isn't decorative — it's needed to outweigh
+   that generic rule's specificity so this override reliably wins regardless of CSS import
+   order. */
 @media (min-width: 900px) {
-  .hero__decor {
+  .hero[data-line-pattern] > .hero__decor {
+    position: absolute;
+    inset: 0;
     display: block;
+    margin-top: 0;
+    pointer-events: none;
   }
 
   /* Every offset below (ring width/right/bottom, badge width/right/bottom) is the exact
@@ -189,6 +262,8 @@
     position: absolute;
     right: -13.7cqw;
     bottom: -6.13cqw;
+    left: auto;
+    top: auto;
     width: 54.58cqw;
     aspect-ratio: 943 / 947;
     background: url("./../assets/icons/badge-ring.svg") no-repeat center / contain;
@@ -198,6 +273,9 @@
     position: absolute;
     right: 8.04cqw;
     bottom: 15.41cqw;
+    left: auto;
+    top: auto;
+    transform: none;
     width: 20.72cqw;
     aspect-ratio: 358 / 355.6;
     display: grid;
