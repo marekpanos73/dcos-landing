@@ -154,14 +154,21 @@
    per client request. .hero switches to a column flex so .hero__decor (first in DOM, for
    the desktop paint-order reasons in the 900px block below) can be visually reordered after
    .hero__container without moving it in the DOM — the line-pattern canvas (also a direct
-   child, prepended by line-pattern.js) stays position:absolute so this doesn't affect it. */
-.hero {
-  display: flex;
-  flex-direction: column;
-}
+   child, prepended by line-pattern.js) stays position:absolute so this doesn't affect it.
+   Scoped to below 900px — left unscoped once, this leaked into the desktop layout too:
+   .hero__container became a flex item instead of a plain block, and its own
+   margin-inline:auto centering (base.css-style) stopped resolving the same way, visibly
+   shifting the whole hero column left of the shared container edge every other section
+   uses. */
+@media (max-width: 899.98px) {
+  .hero {
+    display: flex;
+    flex-direction: column;
+  }
 
-.hero__container {
-  order: 1;
+  .hero__container {
+    order: 1;
+  }
 }
 
 .hero__decor {
@@ -194,8 +201,9 @@
 .hero__ring {
   position: absolute;
   top: 0;
-  /* -10cqw centers the 120cqw ring within .hero__decor's 100cqw box: (100 - 120) / 2. */
-  left: -10cqw;
+  /* NOT (100 - 120) / 2 — see .hero__badge below for why the ring's own bounding-box
+     center isn't the right thing to center on the viewport. */
+  left: 0.575cqw;
   width: 120cqw;
   aspect-ratio: 943 / 947;
   background: url("./../assets/icons/badge-ring.svg") no-repeat center / contain;
@@ -208,15 +216,21 @@
    center the badge on the ring's raw bounding box (top/left: 50%) — badge and cross still
    *looked* plausibly placed at rest, but rotating them (hero-shape.js, scroll-driven) made
    the mismatch obvious: the ring visibly wobbled around a point off from its own true
-   center. Fix: derive the same left/top here as fractions of the ring's own box, computed
-   from the 900px block's own numbers below (badge center at 41.187% across / 41.928% down
-   the ring, in both cases — solved algebraically from that block's right/bottom/width
-   values), then reapplied to *this* 120cqw ring: left = ring's own -10cqw + 41.187% of
-   120cqw; top = 41.928% of 120.509cqw (ring's height). */
+   center. Fix: derive the same left/top here as fractions of the ring's own box (41.187%
+   across / 41.927% down the ring — solved algebraically from the 900px block's own
+   right/bottom/width numbers below), then reapplied to *this* 120cqw ring — BUT that alone
+   re-broke the original "cross center = viewport center" request from a still-earlier
+   round, since the ring's true center isn't its bbox center: centering the *ring's bbox*
+   (previously left: -10cqw, i.e. (100 - 120) / 2) put the badge 10.575cqw left of viewport
+   center. Fixed by solving the other direction instead — pick .hero__ring's `left` so that
+   *the badge's own position* (ring's `left` + 41.187% of 120cqw) lands exactly on
+   .hero__decor's horizontal center (50cqw): left = 50 - 0.411872 × 120 = 0.575cqw. .hero__badge's
+   `left` below is therefore just 50cqw outright — the two are solved together, not
+   independently. */
 .hero__badge {
   position: absolute;
-  top: 50.532cqw;
-  left: 39.425cqw;
+  top: 50.527cqw;
+  left: 50cqw;
   transform: translate(-50%, -50%);
   /* 45.6cqw keeps the badge:ring size ratio identical to the desktop pair below
      (20.72/54.58 of ring width), just recomputed against this 120cqw ring. */
