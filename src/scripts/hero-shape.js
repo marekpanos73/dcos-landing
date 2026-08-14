@@ -14,7 +14,16 @@ gsap.registerPlugin(ScrollTrigger);
  */
 
 const MAX_TILT_DEG = 7; // mouse tilt full range: -7deg (pointer bottom-left) to +7deg (top-right)
-const SCROLL_ROTATION_DEG = -60; // total rotation as the hero scrolls out of view; negative = counter-clockwise
+// The pivot itself is exact (badge/cross center, synced below) — this isn't about correcting
+// an off-center rotation, it's toning down how far the ring's outer edge travels. Below
+// 900px the ring is 120cqw vs. desktop's 54.58cqw (~2.2x the radius, see hero.css), so the
+// same -60deg swings the (non-circular, open "O") shape's visible mass through a much bigger
+// arc — reported as "looks like it's wobbling off-axis" even though the math checked out
+// (verified: ring and cross share the identical rotation center to sub-pixel precision).
+// Scaled down by that same ~2.2x radius ratio so the outer-edge travel distance roughly
+// matches the desktop feel instead of the raw angle.
+const SCROLL_ROTATION_DEG =
+  typeof matchMedia === "function" && matchMedia("(min-width: 900px)").matches ? -60 : -27; // total rotation as the hero scrolls out of view; negative = counter-clockwise
 
 const canTilt =
   typeof matchMedia === "function" &&
