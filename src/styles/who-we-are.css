@@ -9,7 +9,10 @@
 @media (min-width: 900px) {
   .who-we-are {
     text-align: left;
-    padding-block: var(--space-13);
+    padding-top: var(--space-13);
+    /* See --cover-delay-pad's comment in tokens.css: this section is the `pinned` half of
+       the cover transition into .clients (Reference). */
+    padding-bottom: calc(var(--space-13) + var(--cover-delay-pad));
   }
 }
 

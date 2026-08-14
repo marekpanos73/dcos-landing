@@ -50,13 +50,17 @@ function watchActiveSection(links, onChange) {
     ticking = false;
     const line = (header?.offsetHeight ?? 0) + 1;
 
-    let active = tracked[0];
+    // No default to tracked[0] here — before the first tracked section (Řešení) has
+    // actually scrolled up past the header, nothing should be "active" yet. Reported bug:
+    // the ghost showed under "Řešení" immediately on page load, before the user had
+    // scrolled anywhere near it.
+    let active = null;
     for (const entry of tracked) {
       if (entry.section.getBoundingClientRect().top <= line) {
         active = entry;
       }
     }
-    onChange(active.link);
+    onChange(active ? active.link : null);
   }
 
   function onScroll() {
@@ -87,14 +91,17 @@ export function initNavGhost() {
   if (!links.length) return;
 
   const desktopQuery = window.matchMedia(`(min-width: ${NAV_BREAKPOINT}px)`);
-  let current = links[0];
-  let activeLink = links[0];
+  // Starts with nothing active — see the matching change in watchActiveSection's update():
+  // the ghost must stay hidden until the user has actually scrolled down to the first
+  // tracked section, not appear under it from page load.
+  let current = null;
+  let activeLink = null;
   let hovering = false;
 
   function place(link) {
     current = link;
 
-    if (!desktopQuery.matches) {
+    if (!link || !desktopQuery.matches) {
       ghost.classList.remove("is-visible");
       return;
     }
@@ -105,8 +112,6 @@ export function initNavGhost() {
     ghost.style.width = `${linkRect.width}px`;
     ghost.classList.add("is-visible");
   }
-
-  place(current);
 
   links.forEach((link) => {
     link.addEventListener("mouseenter", () => {

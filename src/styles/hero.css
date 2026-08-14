@@ -27,7 +27,10 @@
   overflow-x: clip;
   overflow-y: visible;
   background: var(--gradient-navy);
-  padding-block: var(--space-9) var(--space-13);
+  /* Bottom was --space-13 (128px), same as desktop — visibly oversized on mobile specifically
+     (reported: "masivní mezera"), so it's brought back down to match the top's --space-9
+     (64px) instead of carrying the desktop value down into the mobile layout. */
+  padding-block: var(--space-9);
   /* No padding-inline here on purpose — see .hero__content's margin-inline-start below.
      cqw units (used by .hero__ring / .hero__badge further down) are a percentage of the
      query container's *content box*, i.e. after its own padding is subtracted. Since the
@@ -65,10 +68,19 @@
   flex-direction: column;
   align-items: flex-start;
   gap: var(--space-5);
-  /* Matches Figma's w-[612px] on the text itself — narrower than .hero__container's full
-     content width so long lines of body copy don't stretch past a comfortable measure. */
-  max-width: 612px;
   color: var(--color-white);
+}
+
+@media (min-width: 900px) {
+  .hero__content {
+    /* Matches Figma's w-[612px] on the text itself — narrower than .hero__container's full
+       content width so long lines of body copy don't stretch past a comfortable measure.
+       Gated to the desktop breakpoint on purpose: applied unconditionally, this also capped
+       the mobile/tablet layout (390-900px, which has no Figma frame of its own — see
+       DESIGN-NOTES.md "Breakpoints") well below its actual available width, leaving a
+       reported dead gap on the right that the rest of the page's sections don't have. */
+    max-width: 612px;
+  }
 }
 
 .hero__brand {
@@ -79,28 +91,27 @@
 
 .hero__brand-line {
   font-weight: var(--fw-light);
-  font-size: 32px;
+  /* Scales fluidly with .hero's own width (cqw, same technique as .hero__ring/.hero__badge
+     below) from 32px at the 390px mobile reference to exactly 56px at the 900px content
+     breakpoint, then clamp holds it at 56px above that — matching the old hard breakpoint
+     jump's endpoints exactly, just filling the 390-900px range continuously instead of
+     jumping. That range has no Figma frame of its own (see DESIGN-NOTES.md "Breakpoints"),
+     so smoothing it doesn't deviate from any spec; 900px and up (which IS Figma-specified)
+     is untouched, still exactly 56px. */
+  font-size: clamp(32px, calc(13.65px + 4.706cqw), 56px);
   line-height: 1.35;
 }
 
 .hero__brand-line--big {
   font-weight: var(--fw-semibold);
-  font-size: 72px;
+  /* Same technique as .hero__brand-line above: 72px at 390px to exactly 128px at 900px,
+     then held at 128px past that (matching the old fixed desktop value). */
+  font-size: clamp(72px, calc(29.18px + 10.98cqw), 128px);
   line-height: 1.1;
 }
 
 .hero__brand-dot {
   color: var(--color-orange);
-}
-
-@media (min-width: 900px) {
-  .hero__brand-line {
-    font-size: 56px;
-  }
-
-  .hero__brand-line--big {
-    font-size: 128px;
-  }
 }
 
 .hero__tagline {

@@ -35,6 +35,29 @@ gsap.registerPlugin(ScrollTrigger);
  * not changing — reads as broken, not as a transition. This version is the simpler tradeoff:
  * one viewport-height total, `covering` just flows naturally into place with no positioning
  * logic of its own at all.
+ *
+ * **Read-delay history (2026-08-14):** a client request asked for a pause before `covering`
+ * starts rising, so `pinned`'s last content row has time to register before it's covered. Four
+ * different scroll-driven techniques were tried directly inside this mechanism — a flat extra
+ * amount added to the spacer (jumped on release), a continuously *scrubbed* spacer height
+ * (jump-free but forced a reflow every scroll tick — real, reported flicker/stutter), a scrubbed
+ * `y` transform on `covering` alone (cheap, but desynced `covering` from its own later siblings
+ * since transforms don't move normal-flow layout), and the same transform applied to `covering`
+ * *and* its later siblings as one rigid group (fixed the desync, mathematically verified 0 at
+ * both ends of the range — but still reported as flickering/jumping, cause not conclusively
+ * found; possibly a compositor-layer seam between the fixed `pinned` layer and the
+ * continuously-retransformed group that this project's tooling can't directly observe). All
+ * four were reverted. **Do not re-attempt a scroll-scrubbed (per-tick) fix inside this file
+ * without a way to actually watch it scroll in a real browser first** — every version that
+ * modified `covering`'s (or the spacer's) position every tick has shipped some real, reported
+ * defect, and this file's own git history already carries one *other* unresolved jump report
+ * for a third section pair (see the bottom of this file) from before any of this. The read-delay
+ * requirement is instead met at the CSS layer — see who-we-are.css's and what-we-do.css's own
+ * `--cover-delay-pad` comments — which needs zero scroll-tied JS at all: extra bottom padding on
+ * `pinned` itself pushes its last real content row (and the "bottom bottom" trigger point that
+ * follows it) earlier in the scroll, so that row gets normal, unfrozen, unhurried reading time
+ * *before* the freeze/cover engages, and the freeze — still exactly this original mechanism,
+ * completely untouched — then covers blank padding first, not content.
  */
 function initSectionCover(pinnedSelector, coveringSelector, coveringRevealSelector) {
   const pinned = document.querySelector(pinnedSelector);

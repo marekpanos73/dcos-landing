@@ -14,6 +14,7 @@ import { initHeroShapeRotation } from "./hero-shape.js";
 import { initParallax } from "./parallax.js";
 import { initSectionCoverTransitions } from "./section-cover.js";
 import { initTechnologyGrid } from "./tech-grid.js";
+import { initAnchorScroll } from "./anchor-scroll.js";
 
 initHeaderNav();
 initNavGhost();
@@ -27,3 +28,4 @@ initHeroShapeRotation();
 initParallax();
 initSectionCoverTransitions();
 initTechnologyGrid();
+initAnchorScroll();

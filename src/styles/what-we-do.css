@@ -13,7 +13,10 @@
 @media (min-width: 900px) {
   .what-we-do {
     gap: var(--space-12);
-    padding-block: var(--space-13);
+    padding-top: var(--space-13);
+    /* See --cover-delay-pad's comment in tokens.css: this section is the `pinned` half of
+       the cover transition into .tech-domains. */
+    padding-bottom: calc(var(--space-13) + var(--cover-delay-pad));
   }
 }
 

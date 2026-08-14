@@ -28,7 +28,9 @@
 
 @media (min-width: 900px) {
   .career__inner {
-    gap: var(--space-6);
+    /* Matches .who-we-are__inner's .section-top gap between its eyebrow and heading — was
+       --space-6 (40px) here, visibly more than "Kdo jsme"'s equivalent gap, reported bug. */
+    gap: var(--space-4);
     padding-inline: var(--container-pad-desktop);
   }
 }
@@ -45,7 +47,12 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: var(--grid-col-gap);
-    align-items: center;
+    /* start, not center: centering .career__text inside a row whose height is set by the
+       (taller) gallery photo left empty space above the title, on top of .career__inner's
+       own eyebrow-to-content gap — the two stacked made the eyebrow-to-title distance ~71px
+       instead of the intended 24px (same as "Kdo jsme"'s eyebrow-to-heading gap). Aligning
+       both columns to the row's top removes that second, unintended gap. */
+    align-items: start;
   }
 }
 

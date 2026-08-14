@@ -53,6 +53,16 @@
      row's at any viewport width. A fixed-width first column (tried before — see project
      history) only lines up by coincidence at one specific viewport width. */
   --grid-col-gap: var(--space-4); /* 24px, ≥900px — matches the tile grids' own gap */
+  /* Extra bottom padding, ≥900px only, on the two sections that are the `pinned` half of a
+     section-cover transition (.who-we-are, .what-we-do — see section-cover.js's "Read-delay
+     history" comment). Gives their last real content row normal, unhurried scroll-through
+     reading time before the cover freeze engages, since the freeze then covers this blank
+     padding first instead of that row. One shared value so both stay in sync if retuned.
+     Was 280px — reported as reading like a visible empty gap in the section itself (a
+     scroll-distance delay is unavoidably spatial, there's no time-only version of this that
+     doesn't risk the flicker the JS version had — see section-cover.js), not a felt pause.
+     Halved to 120px, still reportedly too much of a gap, cut to 3/4 of that (90px) next. */
+  --cover-delay-pad: 90px;
 
   /* Motion */
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
