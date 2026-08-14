@@ -105,6 +105,39 @@ change mid-scroll as its address bar collapses/expands — untested here, worth 
 check before treating this as settled. If it does misbehave there, reverting the `matchMedia`
 key back to desktop-only is a clean, one-line rollback.
 
+## Gotcha: nav-jumping straight to a section-cover pin target while its neighbor is mid-freeze (2026-08-14)
+
+[anchor-scroll.js](../src/scripts/anchor-scroll.js) intercepts every in-page `href="#id"` link
+and animates the scroll to it (`GSAP ScrollToPlugin`), computing the target's document `y`
+position **once**, at click time, via `target.getBoundingClientRect().top + window.scrollY`.
+That's only correct while the target is laid out normally — but a `section-cover.js` `pinned`
+element (see the gotcha above) is briefly `position: fixed` while its cover transition is
+active, and at that moment its rect is a **viewport-relative on-screen position**, not a
+document one.
+
+Concretely, this bit `.who-we-are`, which is both the `pinned` half of the
+`.who-we-are`→`.clients` cover pair *and* the direct target of the "Kdo jsme" nav link:
+clicking "Reference" correctly lands while `.who-we-are` is still frozen mid-transition (that's
+the intended resting state — the whole point of the freeze is to hold `pinned` in place while
+`covering` rises over it, and "Reference" is deliberately reached mid-hold). Clicking straight
+back to "Kdo jsme" from there read `.who-we-are`'s fixed (viewport-relative) rect as if it were
+a document position, computed a garbage target `y`, and landed the scroll ~40-50px short —
+still frozen, with `.clients` left overlapping `.who-we-are`'s top instead of flowing fully
+below it. The `.what-we-do`/`.tech-domains` pair never surfaced this because
+`.tech-domains` (the `covering` half) has no direct nav link of its own — the "jump to the
+covering section, then back to the pinned one" path was simply never exercised there, not
+because that pair is inherently more robust.
+
+**Fix, in `anchor-scroll.js` only — deliberately not touching `section-cover.js`'s internals:**
+a small `documentTop(el)` helper checks `getComputedStyle(el).position`; if it's `"fixed"`, it
+briefly clears the element's inline `position`/`top`, reads the now-natural
+`getBoundingClientRect().top`, and restores both — synchronous, so nothing repaints the
+intermediate unfixed state, and a no-op for every other link (the overwhelming majority, never
+`position: fixed` at click time). Kept generic on purpose: it fixes this for *any* element that
+might be transiently `position: fixed` for any reason, not just this one pin, without either
+file needing to know about the other's internals. If a future section-cover pin target is added
+as a nav link, this fix already covers it — no special-casing needed per pair.
+
 ## Two-column content rows share one grid — and one gap
 
 Every two-column row on the page (`.section-heading`, `.career__content`,
