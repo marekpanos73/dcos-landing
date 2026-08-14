@@ -13,6 +13,33 @@ const DURATION_DISTANCE = 2200;
 const EASE = "power2.inOut";
 
 /**
+ * `target.getBoundingClientRect().top` only reflects that element's true *document* position
+ * when it's laid out normally. `section-cover.js` briefly makes a "pinned" section
+ * `position: fixed` (see that file) while its cover transition is mid-flight — its rect at
+ * that moment is a viewport-relative on-screen position, not a document one. Landing on that
+ * section (e.g. "Reference", scrolled to while its pinned neighbor "Kdo jsme" is still frozen
+ * mid-transition) and then clicking straight back to the frozen section's own nav link read a
+ * garbage target `y` from that fixed rect — reported as the next section settling ~40-50px off
+ * instead of scrolling fully clear. Fixed generically (not by reaching into section-cover.js's
+ * internals): if the target is currently `position: fixed`, briefly suspend that inline style,
+ * measure, then restore it — synchronous, no visible flicker (nothing repaints mid-task), and
+ * harmless for the (overwhelmingly common) case where the target isn't fixed at all.
+ */
+function documentTop(el) {
+  if (getComputedStyle(el).position !== "fixed") {
+    return el.getBoundingClientRect().top + window.scrollY;
+  }
+  const position = el.style.position;
+  const top = el.style.top;
+  el.style.position = "static";
+  el.style.top = "";
+  const naturalTop = el.getBoundingClientRect().top + window.scrollY;
+  el.style.position = position;
+  el.style.top = top;
+  return naturalTop;
+}
+
+/**
  * Every in-page `href="#id"` link (nav, mobile menu, footer, hero/section CTAs) currently
  * jumps instantly, per the browser's native anchor behavior. This intercepts those clicks and
  * animates the scroll instead, offset by the sticky header's live height so the target
@@ -35,7 +62,7 @@ export function initAnchorScroll() {
       event.preventDefault();
 
       const headerHeight = header?.offsetHeight ?? 0;
-      const y = target.getBoundingClientRect().top + window.scrollY - headerHeight;
+      const y = documentTop(target) - headerHeight;
 
       // Keeps the URL/back-button in sync without `location.hash`, which triggers the
       // browser's own instant jump-to-anchor and would fight the animation below.
