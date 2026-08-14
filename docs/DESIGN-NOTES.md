@@ -25,6 +25,12 @@ UA default to win. Same trap applies to any other element toggled via the `hidde
 attribute alongside its own unconditional `display` rule — check for this combination
 before assuming `hidden` is doing anything.
 
+**Update (2026-08-14):** in landscape on short viewports, the panel's own content
+(`.mobile-menu__nav` + CTA) can be taller than the available height, and the panel had no
+scroll container of its own — a touch-scroll gesture over it fell through to the page
+underneath instead of scrolling the menu. Fixed with `overflow-y: auto;
+overscroll-behavior: contain;` on `.mobile-menu` itself.
+
 ## Gotcha: GSAP tweens can leave elements permanently offset, killing :hover
 
 `gsap.from(el, {y: N, ...})` — even a single, un-staggered, non-timeline call — can finish
@@ -88,6 +94,16 @@ percentages/constants match normal flow) — now applied to the horizontal axis 
 **This same phantom-gutter effect applies to any other `position:fixed; width:"100%"` (or
 `left/right: 0`) element on this page** — worth checking if a new one is ever added, not
 just this file.
+
+**Update (2026-08-14):** the pin/cover transition (`initSectionCoverTransitions()`) used to
+run behind `ScrollTrigger.matchMedia({"(min-width: 900px)": ...})` — desktop only, no reason
+recorded here or anywhere else for the exclusion. Switched the key to `all` so it also runs
+on mobile; verified structurally (forced scroll + `ScrollTrigger.update()`, no errors, the
+freeze/spacer math checks out) but **not on a real phone**. The one known risk: `top` and the
+pin's `end` distance are both computed from `window.innerHeight`, which mobile Safari can
+change mid-scroll as its address bar collapses/expands — untested here, worth a real-device
+check before treating this as settled. If it does misbehave there, reverting the `matchMedia`
+key back to desktop-only is a clean, one-line rollback.
 
 ## Two-column content rows share one grid — and one gap
 
@@ -233,16 +249,24 @@ There's also deliberately no `min()`/`max()` ceiling on the cqw values anymore �
 graphic keeps scaling up past 1728px instead of freezing there, which is what made it
 read as undersized on wide screens even before the bug above.
 
-The whole `.hero__decor` block renders from `900px` up (originally 1024px, see "Content
-breakpoint lowered" below), same as the rest of the page's sections — earlier this needed a
+This container-query technique — and everything above about `right`/`bottom` offsets sharing
+one cqw basis — describes the **desktop (≥900px)** layout specifically. `.hero__decor` used
+to be `display: none` below 900px entirely (no room in the Figma mobile frame); it's since
+been shown on mobile too, per a later client request, with its own separate positioning
+technique — see "Hero decorative layer on mobile" further down for why it isn't just the same
+`right`/`bottom` numbers at a smaller scale.
+
+This desktop layer renders from `900px` up (originally 1024px, see "Content breakpoint
+lowered" below), same threshold as the rest of the page's sections — earlier this needed a
 separate, higher 1280px threshold to avoid colliding with the text column, but that was
-compensating for the undersized-cqw bug above; once the scaling is correct, testing at the
-content breakpoint (`.hero__ring`'s bounding box does overlap `.hero__content`'s there, but
-the ring is a crescent, not a filled rectangle — the actual visible pixels don't touch)
-showed clean spacing down to that width. If a future redesign changes the text column's
-`max-width` or the decor's proportions, re-verify this empirically (screenshot at a few
-widths) rather than trusting bounding-box math alone — that's what produced the wrong "still
-colliding" call the first time around.
+compensating for the
+undersized-cqw bug above; once the scaling is correct, testing at the content breakpoint
+(`.hero__ring`'s bounding box does overlap `.hero__content`'s there, but the ring is a
+crescent, not a filled rectangle — the actual visible pixels don't touch) showed clean spacing
+down to that width. If a future redesign changes the text column's `max-width` or the decor's
+proportions, re-verify this empirically (screenshot at a few widths) rather than trusting
+bounding-box math alone — that's what produced the wrong "still colliding" call the first time
+around.
 
 ## Header nav: separate breakpoint from the rest of the page, plus a JS fallback
 
@@ -286,6 +310,10 @@ Blog and the bar stalled at Kariéra past that point. Fixed by pointing both nav
 `#blog` to match. Any future nav link needs a matching section id for the same reason.
 
 ## Hero decorative layer: anchor everything the same way
+
+This section is the **desktop (≥900px)** layer specifically — the `position: absolute;
+inset: 0` overlay technique below only applies there; mobile uses a different, in-flow
+technique (see "Hero decorative layer on mobile" further down).
 
 `.hero__ring` and `.hero__badge` (the "Slavíme 20 let" text + dotted cross) must stay
 visually locked together, and both are positioned against `.hero__decor` — **not**
@@ -430,19 +458,70 @@ look in an isolated export is just that crop's bounding box; there's no real car
 container, border, or separate background fill to build.
 
 Implemented: `.hero__decor` / `.hero__ring` / `.hero__badge` in
-[hero.css](../src/styles/hero.css), markup in [index.html](../index.html). Desktop-only
-(hidden below 900px to match the Figma mobile frame). Entrance animation (v1, open to
-revision): fades/scales in after the CTA buttons in the hero timeline, cross accent gets
-its own slight rotate-in — see `animateHero()` in
-[hero-animations.js](../src/scripts/hero-animations.js).
+[hero.css](../src/styles/hero.css), markup in [index.html](../index.html). Originally
+desktop-only (hidden below 900px to match the Figma mobile frame) — see "Hero decorative
+layer on mobile" below for the later addition that shows it on mobile too, with a different
+layout technique. Entrance animation (v1, open to revision): fades/scales in after the CTA
+buttons in the hero timeline, cross accent gets its own slight rotate-in — see
+`animateHero()` in [hero-animations.js](../src/scripts/hero-animations.js).
+
+## Hero decorative layer on mobile (implemented 2026-08-14)
+
+Per later client request (no Figma mobile frame for this — see the badge section above),
+`.hero__decor` also renders below 900px, but not via the desktop's `right`/`bottom`-offset
+overlay technique: it's shown **in-flow, under the CTA buttons**, with the ring/badge
+centered on the *viewport*, not offset to the corner the way Figma's desktop design places
+them. Two non-obvious bugs surfaced getting there, both worth knowing before touching this
+block again:
+
+**1. `badge-ring.svg`'s "C" isn't symmetric within its own 943×947 bounding box.** Its visual
+hole-center — where the badge/cross belongs — sits up-and-left of the box's literal geometric
+center; the desktop rules already reflect this (the badge is offset via `right`/`bottom`,
+never centered, on the ring). An earlier mobile version centered the badge on the ring's raw
+bounding box instead (`top/left: 50%`) — looked plausible at rest, but rotating it
+(`hero-shape.js`'s scroll-driven spin, see below) made the mismatch obvious: the ring visibly
+wobbled around a point off from its own true center, reported as "znak rotuje mimo osu
+kříže." Fixed by solving for the ring's true center as a fraction of its own box — algebraically
+derived from the desktop block's own `right`/`bottom`/width numbers (41.187% across / 41.927%
+down) — and switching both `.hero__ring` and `.hero__badge` to absolute positioning sharing
+one coordinate space (`.hero__decor`) so that fraction can be applied exactly, instead of
+flex-centering plus a coincidental 50/50 guess.
+
+**2. That fix alone reintroduced an *older* bug: viewport-centering.** Once the badge sits at
+the ring's true (off-bbox-center) point, centering the ring's *bounding box* on the viewport
+no longer centers the *badge* on the viewport — and "cross center = viewport center" was the
+original ask. The two constraints (exact rotation pivot, exact viewport centering) can't be
+satisfied independently; `.hero__ring`'s `left` offset is solved so that the badge — already
+positioned at the ring's true center — lands exactly on `.hero__decor`'s horizontal center:
+`left = 50cqw − 0.411872 × 120cqw`. The upshot: the ring's bleed past the viewport edges is
+asymmetric (almost none on the left, most of it on the right) — that's a *consequence* of
+correctly centering an asymmetric shape's true center, not a leftover bug.
+
+**Also watch for:** `.hero` gained `display: flex; flex-direction: column` so `.hero__decor`
+(first in the DOM, for desktop paint-order reasons) can be visually reordered after
+`.hero__container` via `order` without moving it in markup. Get the media-query scoping on
+that declaration wrong — even briefly, as happened once here — and it silently breaks the
+**desktop** layout too: `.hero__container` becomes a flex item, and its
+`margin-inline: auto` centering (matching `.container` everywhere else on the page) stops
+resolving the same way as a plain block, shifting the whole hero column left of the shared
+grid edge every other section uses. Keep that declaration inside `@media (max-width:
+899.98px)`, never bare.
+
+`.hero__ring` is deliberately oversized relative to its mobile container (120cqw vs. the
+desktop pair's 54.58cqw) per client feedback that an earlier, contained version read as too
+small — it bleeds past `.hero`'s left/right edges (clipped there by `.hero`'s own
+`overflow-x: clip`) the same way the desktop ring already bleeds off its corner. A negative
+`margin-bottom` on `.hero__decor` additionally lets the ring's bottom portion tuck under the
+following Stats section's edge, mirroring the desktop bleed-under-the-next-section look
+(same mechanism, not a new one).
 
 ## Hero ring/cross mouse tilt, and scroll parallax (implemented 2026-08-07)
 
 Per client request. Two separate scripts, both gated behind
 `prefers-reduced-motion: reduce` (skip entirely, no listener attached):
 
-**`hero-ring-tilt.js`** — `.hero__ring` and `.hero__badge-cross` rotate a few degrees
-(±7°, `MAX_ROTATION_DEG`) toward the pointer's position in the hero, via `gsap.quickTo` for
+**`hero-shape.js`** — `.hero__ring` and `.hero__badge-cross` rotate a few degrees
+(±7°, `MAX_TILT_DEG`) toward the pointer's position in the hero, via `gsap.quickTo` for
 smooth eased following. Both pivot around the "Slavíme 20 let" badge's own center — the
 ring needs its `transform-origin` computed and kept in sync (via `ResizeObserver`) since its
 own box center isn't the badge's center; the cross doesn't, since it already fills
@@ -452,6 +531,21 @@ position (`(normX - normY) / 2`) — same "/" axis `badge-cross.svg` draws — s
 top-right tilts right, bottom-left tilts left. The "Slavíme" / "20 let" text itself is
 untouched, only the ring and cross graphic move. Desktop + fine-pointer only
 (`hover: hover, pointer: fine, min-width: 900px`).
+
+The same file also runs a second, independent rotation on the same two elements: a
+scroll-scrubbed spin (`SCROLL_ROTATION_DEG`, `ScrollTrigger` with `scrub: true`) as the hero
+scrolls out of view, active at every breakpoint (no pointer/hover gate — this one isn't
+mouse-driven). Both components write into one shared `rotationState` object
+(`{ scroll, tilt }`) and are summed into a single `gsap.set(..., { rotation: scroll + tilt })`
+call rather than each tweening the element's `rotation` directly — two GSAP tweens targeting
+the same transform property on the same element fight each other (last-write-wins jitter)
+instead of composing, see the file's own header comment. **Mobile note (2026-08-14):** the
+scroll rotation's magnitude is halved-ish below 900px (`-27deg` vs. desktop's `-60deg`) — not
+a pivot correction (that's exact either way, see "Hero decorative layer on mobile" above) but
+a magnitude one: the mobile ring's radius is ~2.2× the desktop ring's, so the same angle
+swings its outer edge through a proportionally bigger arc, which read as "wobbling" even
+though the pivot itself was dead center. Scaled the angle down by roughly that same radius
+ratio so the outer-edge travel distance feels comparable to desktop.
 
 **`parallax.js`** — scroll-scrubbed (`ScrollTrigger`, `scrub: true`, `ease: "none"`) drift
 on two things: `.hero__decor` (the whole ring/cross/badge group lags behind as hero scrolls
@@ -562,7 +656,7 @@ fully readable, nothing overlaps or truncates).
 This is a sitewide, mechanical change — every `@media (min-width: 1024px)` in
 `src/styles/*.css` became `900px` (`header.css`'s separate `1280px` nav breakpoint is
 untouched, see above), plus the matching check in
-[hero-ring-tilt.js](../src/scripts/hero-ring-tilt.js) that gates the mouse-tilt effect to
+[hero-shape.js](../src/scripts/hero-shape.js) that gates the mouse-tilt effect to
 the same width the ring/badge actually render at. There's no shared CSS variable for this
 — `@media (min-width: var(--x))` isn't valid CSS, and this project deliberately has no
 preprocessor (CLAUDE.md) — so a future adjustment means repeating the same sitewide
