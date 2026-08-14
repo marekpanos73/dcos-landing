@@ -166,13 +166,22 @@
 
 .hero__decor {
   order: 2;
-  display: flex;
-  justify-content: center;
-  /* Own centering, not .hero__container's — .hero__container has inline padding, which
-     would offset this off the true viewport center. .hero itself has none, so a full-width
-     flex child here centers its content on the viewport, per the "cross center = viewport
-     center" request. */
-  margin-top: var(--space-8);
+  position: relative;
+  /* Explicit height (rather than letting content size it, now that .hero__ring is
+     position:absolute below) — 120.509cqw is 120cqw's own aspect-ratio height
+     (943/947 applied to a 120cqw-wide ring). Own centering, not .hero__container's —
+     .hero__container has inline padding, which would offset this off the true viewport
+     center. .hero itself has none, so a full-width block here centers its ring/badge
+     children (via the offsets below) on the viewport. */
+  height: 120.509cqw;
+  /* Negative margin-bottom pulls the *following* content (hero's own bottom padding, then
+     Stats) up by this much, without moving .hero__ring itself (an absolutely positioned
+     child ignores its container's margin) — so the ring's already-fixed-height bottom slice
+     ends up rendering past .hero's now-shorter box, into Stats, same bleed-under-the-next-
+     section technique the 900px block below already relies on for desktop. Kept the same
+     -6.13cqw/54.58cqw bleed-to-ring-height ratio desktop uses, scaled to this ring's own
+     120.509cqw height, so the proportion of the ring that tucks under matches. */
+  margin-bottom: -13.55cqw;
   pointer-events: none;
 }
 
@@ -183,21 +192,31 @@
    .hero's left/right edges same as desktop's ring does (clipped there by .hero's own
    overflow-x: clip, above), rather than being shrunk to fit inside the viewport. */
 .hero__ring {
-  position: relative;
-  /* flex-shrink:0 — .hero__decor is a flex container (for the mobile reorder above), and
-     without this a flex item's specified width is only a flex-basis, which the default
-     flex-shrink:1 was silently squashing back down to fit .hero__decor's own (100cqw) box,
-     capping the ring at 100cqw regardless of this value. */
-  flex-shrink: 0;
+  position: absolute;
+  top: 0;
+  /* -10cqw centers the 120cqw ring within .hero__decor's 100cqw box: (100 - 120) / 2. */
+  left: -10cqw;
   width: 120cqw;
   aspect-ratio: 943 / 947;
   background: url("./../assets/icons/badge-ring.svg") no-repeat center / contain;
 }
 
+/* badge-ring.svg's open "C" isn't symmetric within its own 943x947 viewBox — its visual
+   hole-center (where the badge/cross belongs, per Figma) sits up-and-left of the box's
+   literal geometric center. The 900px block below already reflects this: its badge is
+   offset (right/bottom), not centered, on the ring. A first version of this file *did*
+   center the badge on the ring's raw bounding box (top/left: 50%) — badge and cross still
+   *looked* plausibly placed at rest, but rotating them (hero-shape.js, scroll-driven) made
+   the mismatch obvious: the ring visibly wobbled around a point off from its own true
+   center. Fix: derive the same left/top here as fractions of the ring's own box, computed
+   from the 900px block's own numbers below (badge center at 41.187% across / 41.928% down
+   the ring, in both cases — solved algebraically from that block's right/bottom/width
+   values), then reapplied to *this* 120cqw ring: left = ring's own -10cqw + 41.187% of
+   120cqw; top = 41.928% of 120.509cqw (ring's height). */
 .hero__badge {
   position: absolute;
-  top: 50%;
-  left: 50%;
+  top: 50.532cqw;
+  left: 39.425cqw;
   transform: translate(-50%, -50%);
   /* 45.6cqw keeps the badge:ring size ratio identical to the desktop pair below
      (20.72/54.58 of ring width), just recomputed against this 120cqw ring. */
@@ -250,7 +269,9 @@
     position: absolute;
     inset: 0;
     display: block;
+    height: auto;
     margin-top: 0;
+    margin-bottom: 0;
     pointer-events: none;
   }
 
