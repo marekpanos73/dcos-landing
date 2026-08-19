@@ -1,702 +1,182 @@
 # Design notes
 
 Rationale for decisions that deliberately deviate from a literal 1:1 Figma reproduction.
-Read this before implementing a section that touches one of these areas.
-
-## Gotcha: `.mobile-menu`'s `hidden` attribute did nothing — it ate every hover/click
-
-The actual cause of "`:hover` doesn't work anywhere except the header button," after the
-GSAP fix below turned out not to be it. [mobile-menu.css](../src/styles/mobile-menu.css)'s
-`.mobile-menu` is `position: fixed` covering the full viewport below the header, and
-`display: flex` unconditionally. The closed state was only `opacity: 0` — nothing set
-`pointer-events: none`, so the fully invisible panel sat on top of every section on the
-page (everything except the header, which it doesn't cover) and silently absorbed every
-mouse event meant for the actual content underneath. It also explains a reported
-`backdrop-filter` flicker over content scrolled under the header: the "closed" panel was
-still compositing at all times, since nothing actually removed it from the render tree.
-
-The `hidden` HTML attribute [mobile-menu.js](../src/scripts/mobile-menu.js) toggles doesn't
-save you here by default: `[hidden] { display: none }` is a browser default with selector
-specificity (0,1,0) — identical to `.mobile-menu`'s own `display: flex` rule — and author
-CSS wins that tie regardless of the attribute being present. Fixed by adding
-`pointer-events: none` to the closed state (`auto` on `.is-open`) and separately
-reasserting `.mobile-menu[hidden] { display: none }` explicitly rather than trusting the
-UA default to win. Same trap applies to any other element toggled via the `hidden`
-attribute alongside its own unconditional `display` rule — check for this combination
-before assuming `hidden` is doing anything.
-
-**Update (2026-08-14):** in landscape on short viewports, the panel's own content
-(`.mobile-menu__nav` + CTA) can be taller than the available height, and the panel had no
-scroll container of its own — a touch-scroll gesture over it fell through to the page
-underneath instead of scrolling the menu. Fixed with `overflow-y: auto;
-overscroll-behavior: contain;` on `.mobile-menu` itself.
-
-## Gotcha: GSAP tweens can leave elements permanently offset, killing :hover
-
-`gsap.from(el, {y: N, ...})` — even a single, un-staggered, non-timeline call — can finish
-with `progress() === 1` while the element's inline `transform` is still stuck at (or near)
-the "from" pose instead of resolving back to the resting value. Reproduced with a plain
-`gsap.from()` on a real page element (no ScrollTrigger, no timeline, no stagger needed);
-GSAP caches per-element transform state on the DOM node itself, and once that cache is off,
-it can re-poison the *next* tween on the same element too — clearing the inline `style`
-attribute by hand doesn't fix it, since the stale value lives in GSAP's cache, not the DOM.
-
-Symptom on this site: [hero-animations.js](../src/scripts/hero-animations.js)'s entrance
-timeline and [scroll-animations.js](../src/scripts/scroll-animations.js)'s ScrollTrigger
-reveals left every button and link they animated sitting ~16–32px off from its intended
-position — invisible at a glance since the offset is small. Worth fixing on its own merits,
-but it turned out to be a red herring for the "hover is dead everywhere except the header"
-report specifically — see the `.mobile-menu` gotcha below for what that actually was. Don't
-assume a stray-transform fix like this one has resolved an interactivity report just
-because it's a plausible-sounding mechanism; verify against the actual reported symptom.
-
-**Fix — always clean up after a tween/timeline that touches anything interactive:**
-`onComplete: () => gsap.set(targets, { clearProps: "all" })`. Both files above do this now.
-Do the same for any new entrance/reveal animation added later, especially anything that
-wraps a button, link, or other element a user will actually interact with.
-
-## Gotcha: `body`'s own `overflow-x: hidden` reserves a phantom scrollbar gutter, breaking `position:fixed; width:"100%"` (2026-08-09)
-
-[section-cover.js](../src/scripts/section-cover.js) (the pinned/covering transition — see
-its own file-header comment for the full mechanism) used to freeze `pinned` with
-`left: 0, width: "100%"`. Reported symptom: a small **horizontal** jump exactly when the
-freeze engages/releases — on a MacBook Air's external monitor in Safari, but not on a Mac
-Mini even at the same viewport width, which pointed away from a pure breakpoint/width bug
-and toward something environment-dependent.
-
-Root cause, confirmed by direct measurement (not just theorized): `body` has always had
-`overflow-x: hidden` (base.css) — CSS spec forces `overflow-y` from its default `visible` to
-`auto` whenever `overflow-x` is anything else, so `body` silently became its own (redundant)
-vertical-scroll container, even though `html`/`documentElement` is the actual page scroller.
-`body.clientWidth` measurably subtracts a scrollbar gutter for this phantom, self-referential
-scrollbar in browsers/scrollbar-render-modes that reserve layout space for `overflow:auto`
-regardless of whether a scrollbar is visibly drawn — confirmed in this repo's own dev
-environment: `body.clientWidth` (1698px) was 15px narrower than `documentElement.clientWidth`
-(1713px) at the same viewport width. Normal-flow content (`.what-we-do`, any full-bleed
-section) renders at `body.clientWidth`, but `position:fixed`'s `width: "100%"` resolves
-against the *initial containing block* (viewport-relative), which ignores `body`'s phantom
-gutter entirely — a guaranteed pixel mismatch between the section's in-flow width and its
-frozen width, in either direction depending on freeze/release. Whether this actually reserves
-visible space is scrollbar-style-dependent (classic reserved-space scrollbars vs. overlay
-scrollbars that take no layout width), which is exactly why it reproduced on one machine and
-not the other at any width — it depends on OS/Safari scrollbar rendering mode, not viewport
-size.
-
-**Fix:** capture `left`/`width` from `pinned.getBoundingClientRect()` at the moment the
-freeze engages (same call already measuring `height`) and set those as explicit pixel values
-instead of `left: 0, width: "100%"` — guarantees the frozen state matches the in-flow state
-exactly, regardless of *why* they might otherwise differ. Verified in this repo's dev
-environment: freezing now measurably applies `width: 1698px` (matching `body.clientWidth`),
-not `100%`/`1728px` (`window.innerWidth`). This is the same principle already applied to
-`top` in that file (compute from a real measurement, never assume viewport
-percentages/constants match normal flow) — now applied to the horizontal axis too.
-
-**This same phantom-gutter effect applies to any other `position:fixed; width:"100%"` (or
-`left/right: 0`) element on this page** — worth checking if a new one is ever added, not
-just this file.
-
-**Update (2026-08-14):** the pin/cover transition (`initSectionCoverTransitions()`) used to
-run behind `ScrollTrigger.matchMedia({"(min-width: 900px)": ...})` — desktop only, no reason
-recorded here or anywhere else for the exclusion. Switched the key to `all` so it also runs
-on mobile; verified structurally (forced scroll + `ScrollTrigger.update()`, no errors, the
-freeze/spacer math checks out) but **not on a real phone**. The one known risk: `top` and the
-pin's `end` distance are both computed from `window.innerHeight`, which mobile Safari can
-change mid-scroll as its address bar collapses/expands — untested here, worth a real-device
-check before treating this as settled. If it does misbehave there, reverting the `matchMedia`
-key back to desktop-only is a clean, one-line rollback.
-
-## Gotcha: nav-jumping straight to a section-cover pin target while its neighbor is mid-freeze (2026-08-14)
-
-[anchor-scroll.js](../src/scripts/anchor-scroll.js) intercepts every in-page `href="#id"` link
-and animates the scroll to it (`GSAP ScrollToPlugin`), computing the target's document `y`
-position **once**, at click time, via `target.getBoundingClientRect().top + window.scrollY`.
-That's only correct while the target is laid out normally — but a `section-cover.js` `pinned`
-element (see the gotcha above) is briefly `position: fixed` while its cover transition is
-active, and at that moment its rect is a **viewport-relative on-screen position**, not a
-document one.
-
-Concretely, this bit `.who-we-are`, which is both the `pinned` half of the
-`.who-we-are`→`.clients` cover pair *and* the direct target of the "Kdo jsme" nav link:
-clicking "Reference" correctly lands while `.who-we-are` is still frozen mid-transition (that's
-the intended resting state — the whole point of the freeze is to hold `pinned` in place while
-`covering` rises over it, and "Reference" is deliberately reached mid-hold). Clicking straight
-back to "Kdo jsme" from there read `.who-we-are`'s fixed (viewport-relative) rect as if it were
-a document position, computed a garbage target `y`, and landed the scroll ~40-50px short —
-still frozen, with `.clients` left overlapping `.who-we-are`'s top instead of flowing fully
-below it. The `.what-we-do`/`.tech-domains` pair never surfaced this because
-`.tech-domains` (the `covering` half) has no direct nav link of its own — the "jump to the
-covering section, then back to the pinned one" path was simply never exercised there, not
-because that pair is inherently more robust.
-
-**Fix, in `anchor-scroll.js` only — deliberately not touching `section-cover.js`'s internals:**
-a small `documentTop(el)` helper checks `getComputedStyle(el).position`; if it's `"fixed"`, it
-briefly clears the element's inline `position`/`top`, reads the now-natural
-`getBoundingClientRect().top`, and restores both — synchronous, so nothing repaints the
-intermediate unfixed state, and a no-op for every other link (the overwhelming majority, never
-`position: fixed` at click time). Kept generic on purpose: it fixes this for *any* element that
-might be transiently `position: fixed` for any reason, not just this one pin, without either
-file needing to know about the other's internals. If a future section-cover pin target is added
-as a nav link, this fix already covers it — no special-casing needed per pair.
-
-## Two-column content rows share one grid — and one gap
-
-Every two-column row on the page (`.section-heading`, `.career__content`,
-`.contact__layout`, and the 2-col tile grids directly beneath a heading —
-`.approach-tiles`, `.leader-tiles`) uses `grid-template-columns: 1fr 1fr` with
-`gap`/`column-gap: var(--grid-col-gap)` ([tokens.css](../src/styles/tokens.css)), so the
-right column's width and x-position match everywhere at any viewport width.
-
-Two traps that both look "correct" individually but break this:
-
-- **A fixed-px first column instead of `1fr 1fr`.** It only lines up with a true 50/50
-  split by coincidence, at whatever one viewport width you measured it at — tried once,
-  looked right at 1728px, drifted at every other width. Always use equal `1fr` tracks.
-- **A grid that's genuinely 50/50 but uses a different `gap`.** The tile grids sit right
-  below a `.section-heading` in the same section and are *also* an honest 50/50 split, but
-  with the smaller `--space-4` gap for their row-gap — using that same value for
-  column-gap shifts their column boundary away from the heading's above it (gap size
-  changes where the 50% line effectively falls once you account for it). Row-gap and
-  column-gap can differ; column-gap must always be `--grid-col-gap` wherever a row needs
-  to align with the rest of the page.
-- **A grid column whose content can't shrink.** Grid items default to `min-width: auto`
-  (their content's min-content size), not `0` — a title in the large display font, or any
-  tile with a long unbreakable word, can hit that min-content width before its column
-  reaches its "fair" 50%/33%/25% `1fr` share. When that happens the track just takes what
-  it needs and the *other* tracks get squeezed to make room, breaking the equal split (and
-  in bad cases overflowing the grid's own container) even though every track is nominally
-  `1fr`. Every grid item on this shared alignment system (`.section-heading__title`/`__body`,
-  `.approach-tile`, `.leader-tile`, `.value-tile`, `.area-tile`, `.reference-tile`,
-  `.career__text`, `.contact__info`, `.site-footer__col`) sets `min-width: 0` for this
-  reason — found via a real bug report: at ~900px the reference-tiles' 4 columns rendered
-  visibly unequal widths (one tile ~35% wider than the narrowest), and separately the
-  who-we-are heading's title/body split drifted off the leader-tiles' column boundary below
-  it.
-
-  `min-width: 0` alone isn't the whole fix, though — it lets the *track* shrink to true
-  equal width, but doesn't stop a word that's now wider than that (now-narrower) track from
-  visibly spilling out of its own box, since overflow is visible by default. That surfaced
-  as a second round of bugs once the first fix shipped: title text overlapping the column
-  next to it, tile text running past its card. Two more rules, both applied alongside
-  `min-width: 0` everywhere above:
-  - **`overflow-wrap: break-word`** as the safety net — if a word truly doesn't fit even
-    after everything else, break it rather than let it overflow into the neighboring column.
-  - **Don't rely on `overflow-wrap` as the *primary* fix for a genuinely-too-narrow grid.**
-    Letting it hyphenate mid-word on every render at a common width (not just a rare
-    untranslated brand name) reads as broken, not resilient. Where that was happening —
-    `.reference-tiles` (4 columns), `.value-tiles` (3 columns), `.site-footer__columns`
-    (4 columns) — the real fix is an intermediate column-count tier: 2 columns from 900px,
-    stepping up to the full count at 1200px (1100px for the footer, which has shorter
-    content) where there's actually enough room. Same idea, separately, for the two big
-    display-font titles that share this grid (`.section-heading__title`, `.career__title`,
-    `.contact__title`): step the font down to 40px from 900px, back to the full 56px at
-    1100px, rather than let `overflow-wrap` hyphenate words like "odpovědnost." or
-    "transformačních" as the normal case at that width.
-
-If a future row needs to join this shared grid, use the same rules — don't invent a new
-width, gap, or min-width value that merely "looks aligned" at the width you happen to be
-testing, and if a tier needs more than min-width:0 + overflow-wrap to look right, an extra
-column-count or font-size step (like the ones above) is the answer, not fighting the text.
-
-- **A grid row whose height is dictated by an unrelated image tile.** `.value-tiles`
-  ("Řešení") mixes 5 text tiles with 1 photo tile in the same grid; from 900px up the photo
-  always shares a row with at least one text tile (2-col: paired with tile 05; 3-col: paired
-  with 04 and 05). The photo (`.value-tile--image img`) originally kept its own
-  `aspect-ratio`, which scales its height with the column's width — on a wide viewport that
-  forced the whole row much taller than the text tiles actually needed, leaving a large,
-  reported-as-a-bug empty gap in 04/05 regardless of how their own content was vertically
-  distributed (see the `.value-tile` centering below — centering only fixed the gap being
-  *lopsided*, not its *size*, since the size was never a text-tile problem to begin with).
-  Fixed by removing the image's `aspect-ratio` from 900px up and switching it to
-  `position: absolute; inset: 0` instead — this takes it out of its own tile's intrinsic
-  sizing entirely, so the tile (and therefore the row) is sized by its text siblings' actual
-  content, and the image just fills whatever height that turns out to be via
-  `object-fit: cover`. Mobile keeps the original `aspect-ratio` approach — `.value-tiles` is
-  a single column there, so the image tile has no row sibling to take a height from and
-  would collapse to 0 without its own intrinsic size. **General rule: before giving an image
-  its own `aspect-ratio` inside a grid row it shares with text content, check whether that
-  row has text siblings at every tier the image tile does — if so, the image will dictate
-  the row's height instead of adapting to it, which usually isn't the intent.**
-
-`.value-tile` itself is `display: flex; flex-direction: column; justify-content: center`
-(was top-anchored) so each tile's own leftover vertical space — after the row-height fix
-above, no longer huge, but still real, since tiles' copy lengths differ — splits evenly
-above/below its content instead of collecting entirely below the last line before the
-divider.
-
-## Gotcha: forced dark mode repainting the page
-
-`body` must have an explicit `background`, and `:root` must declare `color-scheme: light`
-(both set in [tokens.css](../src/styles/tokens.css) / [base.css](../src/styles/base.css)).
-Without them, a browser with OS-level dark mode on will auto-darken any element that has
-no explicit background, repainting the white sections a murky near-black and mangling the
-navy/orange palette everywhere else — this design is light-mode only for now, nothing in
-Figma defines a dark variant, so the browser must be told not to guess.
-
-## Desktop side padding: stepped tiers, not one fluid clamp
-
-An earlier version used `clamp(48px, 14vw, 240px)` for `--container-pad-desktop`. It
-technically scaled down below 1728px, but still read as too much padding through most of
-the 900-1440px range (140-180px there) — one continuous curve doesn't give enough control
-over how it feels at each width. Replaced with explicit stepped tiers in
-[tokens.css](../src/styles/tokens.css): 64px at 900px, 96px at 1280px, 140px at 1440px,
-240px at 1728px (the Figma reference, unchanged). Add more tiers here rather than reaching
-for a fluid function again if a step still looks off at some width.
-
-## Hero ring/badge: proportional to hero width via container queries, not fixed px
-
-The ring and "Slavíme 20 let" badge were originally fixed Figma-px size and position
-(right/bottom offsets) regardless of viewport. That's only correct at exactly the 1728px
-reference width — narrower than that, the fixed-size graphic increasingly overlapped the
-hero text column and the "Jak pracujeme" button, since the text reflows narrower while the
-decor stayed full size.
-
-Fix: `.hero` is a query container (`container-type: inline-size`), and `.hero__ring` /
-`.hero__badge` size and position themselves in `cqw` (percent of the hero's own current
-width) instead of fixed px.
-
-Two things that went wrong on the way to the current version, worth knowing before
-touching this again:
-
-- **All six numbers must share one basis, including the vertical ones.** First pass left
-  `bottom` as fixed px on both elements (reasoning: hero's height doesn't scale with its
-  width, so why should a vertical offset use a width-based unit?) while width/`right` used
-  cqw. That logic misses that `bottom` here isn't really "a distance related to hero's
-  height" — it's part of the ring/badge's own geometry, and needs to shrink at the *same
-  rate* as their width for the two to stay visually locked together as one rigid
-  composition. Mixing scaled and fixed values made the badge visibly drift off the ring's
-  axis at anything other than the 1728px reference. Every offset (ring width/right/bottom,
-  badge width/right/bottom) is now the same fraction of 1728px — e.g. ring width
-  943.092/1728 = 54.58cqw, badge bottom 266.203/1728 = 15.41cqw.
-- **`cqw` is a percentage of the container's content box — after its own padding.**
-  `.hero` used to carry `padding-inline` directly, which shrank the box cqw resolves
-  against and made the ring/badge render smaller than their percentages implied (the
-  "custom grafika je zase moc malá" report was this, not a scaling-factor problem).
-  `.hero` now carries no inline padding at all; `.hero__content` carries
-  `margin-inline` instead (not `padding-inline` — padding would recreate the same problem
-  one level down, and would also eat into its own `max-width: 612px`, which needs to stay
-  the actual text column width to match Figma's `w-[612px]`). `.hero__decor` stays
-  unpadded too, since the ring/badge are meant to size against and bleed past the *true*
-  hero edges.
-
-There's also deliberately no `min()`/`max()` ceiling on the cqw values anymore — the
-graphic keeps scaling up past 1728px instead of freezing there, which is what made it
-read as undersized on wide screens even before the bug above.
-
-This container-query technique — and everything above about `right`/`bottom` offsets sharing
-one cqw basis — describes the **desktop (≥900px)** layout specifically. `.hero__decor` used
-to be `display: none` below 900px entirely (no room in the Figma mobile frame); it's since
-been shown on mobile too, per a later client request, with its own separate positioning
-technique — see "Hero decorative layer on mobile" further down for why it isn't just the same
-`right`/`bottom` numbers at a smaller scale.
-
-This desktop layer renders from `900px` up (originally 1024px, see "Content breakpoint
-lowered" below), same threshold as the rest of the page's sections — earlier this needed a
-separate, higher 1280px threshold to avoid colliding with the text column, but that was
-compensating for the
-undersized-cqw bug above; once the scaling is correct, testing at the content breakpoint
-(`.hero__ring`'s bounding box does overlap `.hero__content`'s there, but the ring is a
-crescent, not a filled rectangle — the actual visible pixels don't touch) showed clean spacing
-down to that width. If a future redesign changes the text column's `max-width` or the decor's
-proportions, re-verify this empirically (screenshot at a few widths) rather than trusting
-bounding-box math alone — that's what produced the wrong "still colliding" call the first time
-around.
-
-## Header nav: separate breakpoint from the rest of the page, plus a JS fallback
-
-The desktop nav (logo + 6 links + Kontakt button) doesn't reliably fit in one line until
-~1280px — noticeably wider than the 900px breakpoint the rest of the page's sections use.
-Rather than force everything to 1280px, the header alone switches at `1280px`
-([header.css](../src/styles/header.css)), while sections keep the general `900px`. This gap
-is intentional and not a bug to close: between 900 and 1280px the header already needs the
-mobile hamburger (the nav genuinely doesn't fit), but page content is still comfortably wide
-enough to stay in its multi-column desktop layout — see "Content breakpoint lowered" below.
-
-That static breakpoint is the common case, not a guarantee — unusual zoom levels or a font
-metric slightly wider than expected can still overflow it. `header-nav.js` is a safety
-net: it measures whether the nav row actually overflows and, if so, adds `.nav-overflow`
-to `<body>`, which forces the mobile hamburger menu even above 1280px. Because of this,
-nothing about "mobile menu mode" can be a fixed media query elsewhere — see
-`mobile-menu.js`, which checks the toggle button's actual computed `display` instead of
-duplicating a breakpoint number.
-
-## Header nav "ghost" indicator: anchored to the header, not the nav, and scrollspy-driven
-
-The 4px sliding underline (`.site-nav__ghost` in [header.css](../src/styles/header.css),
-driven by `initNavGhost()`/`watchActiveSection()` in
-[header-nav.js](../src/scripts/header-nav.js)) is positioned against
-`.site-header__inner`'s bounding rect, not the `<nav>`'s. The nav is vertically centered
-inside a taller header row, so anchoring to the nav's own box would leave equal space above
-and below it; anchoring to the header keeps the bar flush with the header's bottom edge
-(matching the box-shadow divider) regardless of that centering.
-
-At rest (not hovered), the bar tracks scroll position via `watchActiveSection()`: a
-scrollspy that walks the nav links in DOM order and keeps the last one whose section has
-scrolled up past the sticky header's bottom edge — the standard technique, cheap enough for
-this page's handful of sections on every scroll event (rAF-throttled). Hovering/focusing a
-link overrides this immediately; leaving the nav returns the bar to the current scroll-based
-link, not always the first one.
-
-This only works for links whose `href="#id"` matches a real section id — the header/mobile
-"Blog" links used to be bare `href="#"` placeholders (unlike the footer's `href="#blog"`,
-which already pointed at `.blog-teaser`'s `id="blog"`), so the scrollspy silently skipped
-Blog and the bar stalled at Kariéra past that point. Fixed by pointing both nav copies at
-`#blog` to match. Any future nav link needs a matching section id for the same reason.
-
-## Hero decorative layer: anchor everything the same way
-
-This section is the **desktop (≥900px)** layer specifically — the `position: absolute;
-inset: 0` overlay technique below only applies there; mobile uses a different, in-flow
-technique (see "Hero decorative layer on mobile" further down).
-
-`.hero__ring` and `.hero__badge` (the "Slavíme 20 let" text + dotted cross) must stay
-visually locked together, and both are positioned against `.hero__decor` — **not**
-`.hero` directly, even though `.hero__decor` has no explicit `position` of its own in the
-markup. The generic `[data-line-pattern] > *` rule in
-[line-pattern.css](../src/styles/line-pattern.css) sets `position: relative` on every
-direct child of `.hero` so content stacks above the canvas — `.hero__decor` is one of
-those children, so it quietly becomes their containing block. `hero.css` overrides it back
-to `position: absolute; inset: 0`, which makes `.hero__decor` span `.hero`'s box exactly,
-so coordinates on `.hero__ring` / `.hero__badge` behave as if set directly on `.hero`.
-
-Given that, both decorative elements are positioned with fixed `right`/`bottom` pixel
-offsets (matching Figma's numbers, translated into offsets from the right/bottom edge) —
-**not** `top`/`left` percentages. `.hero`'s height is content-driven, not the fixed 1116px
-of the Figma reference, so a `top: 44%`-style anchor drifts away from the ring (which is
-itself bottom-anchored) any time the rendered hero height differs from that reference.
-Fixed right/bottom offsets on both elements keep them locked together regardless.
-
-`.hero`'s overflow is split per axis, not one `overflow: visible` (what this used to be):
-`overflow-y: visible` — required, `.hero__ring` is designed to bleed down past `.hero`'s own
-bottom edge into the Stats section below it (see next section), and clipping this axis at
-all breaks that. `overflow-x: clip` — added 2026-08-09 to actually fix a reported iPadOS
-Safari bug where the ring's right-edge bleed (past `.hero`'s own right edge, which already
-sits at the viewport's edge since `.hero` has no `padding-inline`) wasn't being reliably
-clipped by `body`'s `overflow-x: hidden` alone, letting the browser's layout viewport expand
-to fit it and widen the whole page.
-
-**Two things make `overflow-x: clip` specifically the right tool here, not `hidden`:**
-1. **It doesn't force the other axis to `auto`.** Per spec, pairing a non-`visible`
-   `overflow-x` with a `visible` `overflow-y` normally promotes the visible one to `auto` —
-   which single-axis-`hidden` would have done here too, silently clipping the vertical Stats
-   bleed this section depends on. `clip` is exempt from that pairing rule (verified directly:
-   setting only `overflow-x: clip` left `overflow-y`'s *computed* value as genuinely
-   `visible`, not `auto`) — the one CSS overflow value that lets one axis clip and the other
-   stay truly unclipped on the same element.
-2. **It doesn't need to touch `html`.** An earlier attempt at this exact bug added
-   `overflow-x: hidden` to `html`/`documentElement` directly, on the theory that `body`-only
-   wasn't reliably propagating to clip the real viewport on iPadOS Safari. That broke
-   `position: sticky` on `.site-header` instead — `html` is the real root scroller
-   (`document.scrollingElement`), and any non-`visible` `overflow-x` on it (confirmed for both
-   `hidden` and `clip`) turns it into its own distinct scroll container, which breaks sticky
-   positioning for descendants regardless of whether that container ever visually scrolls.
-   Clipping at `.hero` itself sidesteps this category of bug entirely: `.hero` is a **sibling**
-   of `.site-header` (see index.html — the header and `<main>`, which contains `.hero`, are
-   both direct children of `body`), never its ancestor, so nothing set on `.hero` can affect
-   the header's containing-block resolution no matter which overflow value is used.
-
-`overflow: clip` needs Safari 16+ — a non-issue for the M2 iPad this was reported on (M2
-shipped with iPadOS 16 as its floor), and a no-op fallback (no extra protection, not a
-regression) on anything older that doesn't support it. `body`'s own `overflow-x: hidden`
-stays as-is, unrelated and still doing its job as the first line of defense; this is an
-additional, more targeted one specifically for the ring's known bleed source.
-
-## Stats section: solid, not frosted — backdrop-filter turned out unreliable (2026-08-09)
-
-Figma's Stats section originally called for `backdrop-blur` + a semi-transparent white
-"Lighten" layer, which only does anything visible if something sits behind it to blur —
-that something is the hero's orange ring, which overlaps into this section's geometry (see
-above). `.stats` in [stats.css](../src/styles/stats.css) shipped that way (semi-transparent
-`rgba(246,246,246,0.75)` + `backdrop-filter: blur(80px)`, both prefixed) for a while, and it
-genuinely worked in Safari (confirmed on iPadOS). But real cross-device QA found it silently
-not rendering at all in Chrome, on two unrelated machines (a Windows PC and a MacBook Air
-M2) — the backdrop just stayed unblurred, showing the ring's bottom edge as a sharp,
-distracting hard edge instead of a soft one. Likely cause, not independently confirmed since
-neither failing machine/browser was available to debug directly: `.hero` carries
-`isolation: isolate` (from `[data-line-pattern]`, see below), which creates its own stacking
-context; the ring bleeds out past `.hero`'s own box into `.stats`'s visual area, and content
-that overflows an isolated ancestor like that is a known rough edge for Chromium's
-backdrop-filter backdrop-sampling — plausible, but genuinely unverified here.
-
-Given that, and given `backdrop-filter` has no fallback at all for browsers that don't
-support it either (older browsers would show the same unblurred-ring problem, just for a
-different reason), the fix was to stop depending on it working: `.stats` is now a flat
-`#f6f6f6` (same grey already used for `.reference-tile`/`.approach-tile`/`.contact-form`
-backgrounds elsewhere), which hides the ring's bleed completely and correctly on every
-browser, unconditionally. This trades away the frosted "ring peeks through, softened" look
-from Figma — if backdrop-filter reliability across Chrome versions ever gets independently
-confirmed fixed, revisiting the frosted look would need to re-verify this isolation theory
-first, not just re-add the two `backdrop-filter` lines.
-
-## Line pattern (/////) on dark-blue blocks
-
-In Figma the pattern only exists in the hero and footer, with lines that are thin at the
-block edges and slightly thicker toward the middle. Those blocks are fixed height in the
-design, but on the real site dark-blue block height varies with content — so the pattern
-can't be a fixed-size raster or a rigid line grid without breaking on other heights.
-
-Per client request, the pattern now also runs on every other dark-blue block, not just the
-two Figma originally specified — `[data-line-pattern]` is set on `.mobile-menu` (0.6),
-`.hero` (1), `.tech-domains` (0.7), `.who-we-are` (0.7), `.career` (0.6), and `.site-footer`
-(0.5). The opacity values are a judgment call (lighter on blocks with a lot of card/photo
-content already competing for attention), not pulled from Figma — adjust freely if a
-section reads too busy or too flat.
-
-**Static look:** a repeating diagonal-line pattern that tiles at any block height, with a
-soft alpha falloff from the edges toward the middle — faking the "thicker in the middle"
-look without literal variable stroke width.
-
-**Approach — canvas, not CSS/SVG:** the mouse-follow ripple below (added 2026-08-06) needs
-per-frame control over individual line-segment positions, which plain CSS transforms or
-SVG filters can't drive smoothly at that granularity or cost. So the pattern is one
-reusable `<canvas>`-based component (e.g. `LinePattern`), not a CSS class — it renders the
-diagonal lines as short segments on a grid, with the edge/middle thickness falloff applied
-as a per-segment alpha/width multiplier, at any container size.
-
-### Mouse-follow ripple interaction
-
-On pointer movement over a pattern block, the lines near the cursor displace slightly
-perpendicular to their direction — a small ripple that follows the cursor — and relax back
-to flat over roughly 0.6–1s after the cursor moves away or stops. Subtle effect, not a
-discrete triggered animation.
-
-- Each frame, segment points within a falloff radius of the last-known cursor position are
-  offset by a damped sine wave: displacement magnitude decays with distance from the
-  cursor (spatial falloff) and with time since the cursor was last near that point
-  (temporal decay back to flat).
-- The `requestAnimationFrame` loop only runs while ripple energy remains anywhere in the
-  block; it goes idle with no cursor movement, so pattern blocks with a stale cursor cost
-  nothing.
-
-**Fallback / accessibility:**
-- `prefers-reduced-motion: reduce` → render the static pattern only (edge/middle falloff,
-  no ripple), no rAF loop at all.
-- Coarse pointer / touch → same static fallback; there's no persistent cursor to follow.
-- If canvas ever needs dropping for a given block (perf, browser support), it degrades to
-  a plain uniform-thickness static line — acceptable fallback per the client.
-
-**Reuse:** one `LinePattern` component, parameterized by container size, serves every
-dark-blue block that uses the pattern — hero, footer, and the "Slavíme 20 let" badge (see
-below). Don't fork separate static/interactive implementations per section.
-
-## "Slavíme 20 let" badge (implemented, hero section)
-
-Corrected 2026-08-06 after pulling the real Figma node (`14:44`, hero desktop only — the
-mobile hero frame drops this element entirely, no room): it is **not** a separate square
-card. It's just centered text ("Slavíme" / "20 let") plus a dotted-cross accent SVG
-(`src/assets/icons/badge-cross.svg`), absolutely positioned on top of the Hero's own
-background — the same `LinePattern` canvas and the same giant orange ring graphic
-(`src/assets/icons/badge-ring.svg`, Figma layer "O", 943×947, bleeds off the hero's
-bottom-right corner) that are already behind the rest of the hero. The "square badge"
-look in an isolated export is just that crop's bounding box; there's no real card
-container, border, or separate background fill to build.
-
-Implemented: `.hero__decor` / `.hero__ring` / `.hero__badge` in
-[hero.css](../src/styles/hero.css), markup in [index.html](../index.html). Originally
-desktop-only (hidden below 900px to match the Figma mobile frame) — see "Hero decorative
-layer on mobile" below for the later addition that shows it on mobile too, with a different
-layout technique. Entrance animation (v1, open to revision): fades/scales in after the CTA
-buttons in the hero timeline, cross accent gets its own slight rotate-in — see
-`animateHero()` in [hero-animations.js](../src/scripts/hero-animations.js).
-
-## Hero decorative layer on mobile (implemented 2026-08-14)
-
-Per later client request (no Figma mobile frame for this — see the badge section above),
-`.hero__decor` also renders below 900px, but not via the desktop's `right`/`bottom`-offset
-overlay technique: it's shown **in-flow, under the CTA buttons**, with the ring/badge
-centered on the *viewport*, not offset to the corner the way Figma's desktop design places
-them. Two non-obvious bugs surfaced getting there, both worth knowing before touching this
-block again:
-
-**1. `badge-ring.svg`'s "C" isn't symmetric within its own 943×947 bounding box.** Its visual
-hole-center — where the badge/cross belongs — sits up-and-left of the box's literal geometric
-center; the desktop rules already reflect this (the badge is offset via `right`/`bottom`,
-never centered, on the ring). An earlier mobile version centered the badge on the ring's raw
-bounding box instead (`top/left: 50%`) — looked plausible at rest, but rotating it
-(`hero-shape.js`'s scroll-driven spin, see below) made the mismatch obvious: the ring visibly
-wobbled around a point off from its own true center, reported as "znak rotuje mimo osu
-kříže." Fixed by solving for the ring's true center as a fraction of its own box — algebraically
-derived from the desktop block's own `right`/`bottom`/width numbers (41.187% across / 41.927%
-down) — and switching both `.hero__ring` and `.hero__badge` to absolute positioning sharing
-one coordinate space (`.hero__decor`) so that fraction can be applied exactly, instead of
-flex-centering plus a coincidental 50/50 guess.
-
-**2. That fix alone reintroduced an *older* bug: viewport-centering.** Once the badge sits at
-the ring's true (off-bbox-center) point, centering the ring's *bounding box* on the viewport
-no longer centers the *badge* on the viewport — and "cross center = viewport center" was the
-original ask. The two constraints (exact rotation pivot, exact viewport centering) can't be
-satisfied independently; `.hero__ring`'s `left` offset is solved so that the badge — already
-positioned at the ring's true center — lands exactly on `.hero__decor`'s horizontal center:
-`left = 50cqw − 0.411872 × 120cqw`. The upshot: the ring's bleed past the viewport edges is
-asymmetric (almost none on the left, most of it on the right) — that's a *consequence* of
-correctly centering an asymmetric shape's true center, not a leftover bug.
-
-**Also watch for:** `.hero` gained `display: flex; flex-direction: column` so `.hero__decor`
-(first in the DOM, for desktop paint-order reasons) can be visually reordered after
-`.hero__container` via `order` without moving it in markup. Get the media-query scoping on
-that declaration wrong — even briefly, as happened once here — and it silently breaks the
-**desktop** layout too: `.hero__container` becomes a flex item, and its
-`margin-inline: auto` centering (matching `.container` everywhere else on the page) stops
-resolving the same way as a plain block, shifting the whole hero column left of the shared
-grid edge every other section uses. Keep that declaration inside `@media (max-width:
-899.98px)`, never bare.
-
-`.hero__ring` is deliberately oversized relative to its mobile container (120cqw vs. the
-desktop pair's 54.58cqw) per client feedback that an earlier, contained version read as too
-small — it bleeds past `.hero`'s left/right edges (clipped there by `.hero`'s own
-`overflow-x: clip`) the same way the desktop ring already bleeds off its corner. A negative
-`margin-bottom` on `.hero__decor` additionally lets the ring's bottom portion tuck under the
-following Stats section's edge, mirroring the desktop bleed-under-the-next-section look
-(same mechanism, not a new one).
-
-## Hero ring/cross mouse tilt, and scroll parallax (implemented 2026-08-07)
-
-Per client request. Two separate scripts, both gated behind
-`prefers-reduced-motion: reduce` (skip entirely, no listener attached):
-
-**`hero-shape.js`** — `.hero__ring` and `.hero__badge-cross` rotate a few degrees
-(±7°, `MAX_TILT_DEG`) toward the pointer's position in the hero, via `gsap.quickTo` for
-smooth eased following. Both pivot around the "Slavíme 20 let" badge's own center — the
-ring needs its `transform-origin` computed and kept in sync (via `ResizeObserver`) since its
-own box center isn't the badge's center; the cross doesn't, since it already fills
-`.hero__badge` exactly (`inset: 0`) so its default 50% 50% origin already lands on the
-badge's center. The rotation amount is a diagonal projection of the pointer's normalized
-position (`(normX - normY) / 2`) — same "/" axis `badge-cross.svg` draws — so pointer
-top-right tilts right, bottom-left tilts left. The "Slavíme" / "20 let" text itself is
-untouched, only the ring and cross graphic move. Desktop + fine-pointer only
-(`hover: hover, pointer: fine, min-width: 900px`).
-
-The same file also runs a second, independent rotation on the same two elements: a
-scroll-scrubbed spin (`SCROLL_ROTATION_DEG`, `ScrollTrigger` with `scrub: true`) as the hero
-scrolls out of view, active at every breakpoint (no pointer/hover gate — this one isn't
-mouse-driven). Both components write into one shared `rotationState` object
-(`{ scroll, tilt }`) and are summed into a single `gsap.set(..., { rotation: scroll + tilt })`
-call rather than each tweening the element's `rotation` directly — two GSAP tweens targeting
-the same transform property on the same element fight each other (last-write-wins jitter)
-instead of composing, see the file's own header comment. **Mobile note (2026-08-14):** the
-scroll rotation's magnitude is halved-ish below 900px (`-27deg` vs. desktop's `-60deg`) — not
-a pivot correction (that's exact either way, see "Hero decorative layer on mobile" above) but
-a magnitude one: the mobile ring's radius is ~2.2× the desktop ring's, so the same angle
-swings its outer edge through a proportionally bigger arc, which read as "wobbling" even
-though the pivot itself was dead center. Scaled the angle down by roughly that same radius
-ratio so the outer-edge travel distance feels comparable to desktop.
-
-**`parallax.js`** — scroll-scrubbed (`ScrollTrigger`, `scrub: true`, `ease: "none"`) drift
-on two things: `.hero__decor` (the whole ring/cross/badge group lags behind as hero scrolls
-away) and `.career__gallery` (the career collage block). Both are kept deliberately modest —
-tuned down twice already after the first two passes overshot: `.hero__decor`'s range pushed
-the ring down into the Stats section's client-logos content (it already bleeds past hero's
-own bottom edge by design, so parallax on top of that adds up fast), and an earlier version
-also scaled+clipped photos for parallax "overscan room", which is fine for an ordinary photo
-but wrecked `career-photos.webp` specifically — that file is a single pre-composed collage
-(four photos arranged edge-to-edge), so scaling it up to avoid revealing a frame edge crops
-directly into the composition instead. `.career__gallery` deliberately has no
-`overflow: hidden` and its image gets no `scale`/`clip` treatment for this reason — if a
-future parallax pass touches it again, drift the block, don't scale the image.
-`.value-tile--image` (the "Řešení" photo) had the same scale-based treatment tried and
-dropped entirely — no parallax on it at all now, plain photo, per client feedback.
-
-## Background glow on dark-blue blocks
-
-Figma achieves the lightening effect with blurred white circle layers. On the web this is
-reproduced as a `radial-gradient()` on a `.bg-navy--glow::before` pseudo-element
-([line-pattern.css](../src/styles/line-pattern.css)) — same visual effect, no extra DOM
-layers, no blur filter cost, and it scales with block size automatically.
-
-The glow's center isn't the same spot in every block — Figma places it differently per
-section. `.bg-navy--glow::before` reads its position from a `--glow-position` custom
-property (`circle at var(--glow-position, 82% 100%)`), which each block sets on itself:
-`.hero` 82% 100% (bottom-right, under the "Slavíme 20 let" badge), `.tech-domains` 18% 100%
-(bottom-left), `.who-we-are` 82% 50% (right edge, vertically centered), `.career` 18% 0%
-(top-left). `.site-footer` deliberately has no glow at all per Figma — it doesn't carry the
-`bg-navy--glow` class, just the plain `--gradient-navy` background.
-
-## Global type scale: `--text-scale`, applied per-declaration via `calc()` (2026-08-09)
-
-Real cross-device QA found the hero's CTAs and decorative ring sitting below the fold on
-common laptop viewports, and separately that buttons read as too small relative to body
-text at the sizes Figma specified. Rather than hand-picking new px values across every
-file, [tokens.css](../src/styles/tokens.css) defines `--text-scale` (`0.9` base/mobile,
-`0.85` from the existing `900px` content breakpoint), and every affected `font-size`
-declaration is written as `calc(Npx * var(--text-scale))` instead of a bare px value — one
-variable to retune instead of re-editing every file by hand, which matters here because
-both numbers are an explicit first pass the user expects to iterate on after another round
-of visual QA, not a final spec.
-
-**Deliberately exempted — do not wrap these in `calc(... * var(--text-scale))`:** the hero
-claim (`.hero__brand-line`/`--big`, hero.css), the "Slavíme 20 let" badge
-(`.hero__badge-label`/`-years`, cqw-based), the desktop nav and mobile menu
-(`.site-nav__list a` in header.css, all of mobile-menu.css), every button label (all of
-buttons.css, `.lang-switch__btn`), the footer tagline paragraph (`.site-footer__col p`, not
-`.site-footer__heading`), the Reference-card copy (`.reference-tile p`, clients.css), and
-everything inside the contact form itself (`.contact-form__field label`/`input`/`textarea`,
-`.contact-form__consent` — but *not* `.contact__title`/`.contact__lede`/`.contact__details`,
-which are the section's left info column, not the form, and do scale). The reasoning behind
-each exemption lives with the request, not here — if adding a new text element to one of
-these components, match its neighbors' exemption rather than assuming everything scales by
-default.
-
-## Animation roadmap
-
-- **Now:** GSAP is installed and is the default for scroll-triggered / entrance
-  animations (ScrollTrigger plugin as needed).
-- **Now:** the `LinePattern` canvas component's mouse-follow ripple (see above) — plain
-  `requestAnimationFrame`, not GSAP, since it's a continuous pointer-driven simulation
-  rather than a discrete tween.
-- **Open:** the "Slavíme 20 let" badge graphic (see above) needs an entrance/scroll
-  animation — motion not yet specified, spec it when that section is implemented.
-- **Later:** a 3D element via Three.js is planned but not scoped yet. Do not add the
-  dependency or scaffolding until that work is actually requested — avoids an unused
-  dependency sitting in the repo in the meantime.
-
-## Image pipeline
-
-Assets are pulled directly from the Figma file via the Figma MCP (`download_assets`) —
-not hand-prepared. Photos are converted to `.webp` (via `sharp`, installed as a dev
-dependency); icons/vectors are exported and optimized as `.svg` (via `svgo`, also a dev
-dependency). Both tools run through small one-off scripts, not a persisted build-time
-pipeline, since assets are pulled once per section, not on every build.
-
-**Gotcha: Figma's SVG export sets `preserveAspectRatio="none"`.** All 10 client-logo SVGs
-(`src/assets/icons/logos/*.svg`) shipped with this attribute, which tells the SVG to stretch
-and fill whatever box it's placed in instead of preserving its own proportions — invisible
-as long as the `<img>` happens to render at close to the logo's natural aspect ratio, but
-once a narrower grid column (only `height="NN"` is set on these `<img>` tags, no `width`)
-forces the element's rendered width down via `max-width: 100%` while the HTML `height`
-attribute keeps the height pinned, the logo visibly squishes/stretches. Fixed by stripping
-`preserveAspectRatio="none"` from all ten files (falls back to the SVG default
-`xMidYMid meet`, which letterboxes instead of distorting). Re-check for this attribute on
-any future logo/icon pulled through the same export pipeline.
+Read the relevant section before touching one of these areas.
 
 ## Breakpoints
 
-Two Figma frames define the breakpoints: `Home mobile` (base, mobile-first) and
-`Home desktop` (min-width breakpoint). `Mobile menu` is the open state of the mobile nav,
-not a separate breakpoint. Figma doesn't specify the exact px switch-over — the content
-breakpoint is `900px`; between 390px and 900px the mobile layout stretches rather than
-matching a real Figma frame, since none exists for that range.
+- **Content breakpoint: `900px`.** Mobile-first; below it matches the `Home mobile` Figma
+  frame, above it matches `Home desktop`. Not tied to any device class — it's the width
+  where the desktop grids (3-col `.value-tiles`, 4-col `.site-footer__columns`) stop feeling
+  cramped.
+- **Header nav breakpoint: `1280px`**, separate from the content breakpoint
+  ([header.css](../src/styles/header.css)). Logo + 6 links + Kontakt button don't reliably
+  fit in one line below that width, even though page content is still comfortably desktop at
+  900–1280px. [header-nav.js](../src/scripts/header-nav.js) also measures actual overflow at
+  runtime and adds `.nav-overflow` to `<body>` as a fallback for unusual zoom/font metrics —
+  `mobile-menu.js` checks the toggle button's computed `display` rather than duplicating a
+  breakpoint number, so it stays in sync with either trigger.
+- No shared CSS variable drives these — `@media (min-width: var(--x))` isn't valid CSS and
+  this project has no preprocessor (see CLAUDE.md). A future breakpoint change means a
+  sitewide find-and-replace across `src/styles/*.css`, not editing one token.
 
-### Content breakpoint lowered from 1024px to 900px (2026-08-07)
+## Shared two-column grid
 
-Per client feedback: at a viewport comfortably wide enough for the desktop content
-layout (multi-column grids, side-by-side sections) to look fine, the page was still
-switching to the single-column mobile layout, because the content breakpoint (1024px) had
-no real justification beyond "standard tablet/desktop boundary" — it wasn't derived from
-when the desktop layout actually needs the room. Lowered to 900px after testing the
-tightest grids at that width (the 3-column `.value-tiles` and 4-column
-`.site-footer__columns` — the footer's longer labels wrap to two lines at 900px but stay
-fully readable, nothing overlaps or truncates).
+`.section-heading`, `.career__content`, `.contact__layout`, `.approach-tiles`,
+`.leader-tiles`, and the reference/value/area tile grids all share one alignment system so
+columns line up across sections:
 
-This is a sitewide, mechanical change — every `@media (min-width: 1024px)` in
-`src/styles/*.css` became `900px` (`header.css`'s separate `1280px` nav breakpoint is
-untouched, see above), plus the matching check in
-[hero-shape.js](../src/scripts/hero-shape.js) that gates the mouse-tilt effect to
-the same width the ring/badge actually render at. There's no shared CSS variable for this
-— `@media (min-width: var(--x))` isn't valid CSS, and this project deliberately has no
-preprocessor (CLAUDE.md) — so a future adjustment means repeating the same sitewide
-find-and-replace, not editing one token.
+- `grid-template-columns: 1fr 1fr` (never a fixed-px first column) with `column-gap:
+  var(--grid-col-gap)` ([tokens.css](../src/styles/tokens.css)) — row-gap can differ per
+  component, column-gap must not.
+- `min-width: 0` on every grid item — grid items default to their content's min-content
+  width, which can force a track wider than its fair share (long titles, unbreakable words).
+- `overflow-wrap: break-word` as a safety net only, not the primary fix — a grid that
+  regularly needs it at a common width should get an intermediate column-count tier instead
+  (2 columns from 900px, full count from ~1100–1200px) or a stepped-down font size, not rely
+  on mid-word breaks as the normal case.
 
-Hero text blocks are implemented as normal document flow with token-based gaps, not as
-literal absolute-positioned copies of Figma's per-node coordinates — the Figma export
-positions every text node with `top`/`left` px values tuned to one fixed frame size, which
-doesn't reflow and isn't something a real dev would ship. Same principle applies to every
-other section as they're built.
+`.value-tiles` additionally keeps its photo tile from dictating row height: the image is
+`position: absolute; inset: 0` with `object-fit: cover` from 900px up (removed from its own
+tile's intrinsic sizing) instead of `aspect-ratio`, which would otherwise force the whole row
+to the image's height. Mobile keeps `aspect-ratio` since the tile has no row sibling there.
+
+**Desktop side padding** is stepped tiers in tokens.css (64/96/140/240px at
+900/1280/1440/1728px), not a fluid `clamp()` — a continuous curve gave too little control
+over how padding felt through the 900–1440px range specifically.
+
+## Header
+
+- **Nav ghost indicator** (`.site-nav__ghost`) is positioned against `.site-header__inner`'s
+  bounding rect, not the `<nav>`'s, so it stays flush with the header's bottom edge
+  regardless of the nav's own vertical centering. At rest it tracks scroll position via a
+  scrollspy (`watchActiveSection()` in header-nav.js); hover/focus overrides it. Any nav link
+  needs an `href="#id"` matching a real section id, or the scrollspy silently skips it.
+- **Language toggle flags** (`.lang-toggle`, `src/assets/icons/flag-*.svg`): border and
+  rounding are baked into the SVG artwork itself (a `clipPath` plus a flat "donut" border
+  shape), not drawn in CSS. CSS-side clipping (border-radius + overflow, outline, box-shadow,
+  nested luminance masks) proved unreliable specifically on iOS Safari at this icon's small
+  size — see git history on `header.css`/`flag-*.svg` if this needs revisiting. `.lang-toggle`
+  itself is just the click target (40px mobile / 38px desktop) with the flag centered inside;
+  hover swaps to a second, pre-bordered SVG rather than a CSS color change.
+
+## Section-cover pin/reveal transition
+
+Two adjacent full-bleed sections ("ŘEŠENÍ"→"Naše technologické domény",
+"Kdo jsme"→"Reference") use a pinned-cover effect: the first section freezes in place while
+the second rises over it. Implemented in
+[section-cover.js](../src/scripts/section-cover.js) as a hand-rolled freeze
+(`getBoundingClientRect()`-measured `position: fixed`) rather than GSAP's `pin: true` — the
+GSAP version had a Safari-only regression (stuck compensating transform on unpin) that a
+structural rewrite resolved more reliably than patching around it.
+
+Rules worth keeping in mind before editing this file again:
+
+- Freeze position/size (`top`, `left`, `width`) must be computed from the trigger's own
+  definition or a fresh `getBoundingClientRect()` read, never assumed — `body`'s
+  `overflow-x: hidden` (see below) makes `body.clientWidth` narrower than the viewport in
+  some scrollbar-render modes, so `width: "100%"` on a fixed element doesn't reliably match
+  the section's own in-flow width.
+- The frozen element needs an explicit `z-index` on both sides of the toggle (`-1` while
+  frozen) — implicit stacking order for a toggled `position: fixed` element isn't reliable in
+  Safari.
+- `ScrollTrigger.refresh()` must only run once the affected element is back in normal,
+  measurable flow — calling it while something is mid-`position:fixed` measures the wrong
+  (viewport-relative) rect and can cascade into a large, incorrect scroll-position jump.
+- [anchor-scroll.js](../src/scripts/anchor-scroll.js)'s `documentTop()` helper handles
+  jumping directly to a nav target that's transiently `position: fixed` mid-transition —
+  it briefly clears/restores the inline position to read a true document-relative position.
+  Generic by design; covers any future pin target without special-casing per pair.
+
+## Hero decorative layer (ring + "Slavíme 20 let" badge)
+
+**Desktop (≥900px):** `.hero__ring` / `.hero__badge` are sized and positioned in `cqw`
+(`.hero` is a query container) rather than fixed px, so the graphic scales with the hero's
+own width instead of only matching Figma at exactly 1728px. All six offsets (width/right/bottom
+on both elements) share one basis — the same fraction of the 1728px reference — so the ring
+and badge stay locked together at any width. `.hero` carries no inline padding of its own
+(`.hero__content` uses margin instead) since `cqw` resolves against the container's content
+box, after its own padding.
+
+**Mobile (<900px):** shown in-flow under the CTA buttons, not the desktop's offset-overlay
+technique. Two things to know if this block needs editing:
+
+- `badge-ring.svg`'s visual center isn't its bounding-box center (true center sits at
+  41.19%/41.93% of the box) — the badge and rotation pivot must use that fraction, not a
+  50/50 center, or the ring visibly wobbles off-axis when rotated.
+- `.hero__ring`'s `left` offset is solved algebraically so the *badge* (not the ring's
+  bounding box) lands on viewport-center — the ring's bleed past the viewport edges is
+  intentionally asymmetric as a result, not a bug.
+
+`.hero`'s overflow is split per axis: `overflow-y: visible` (the ring bleeds into the Stats
+section below by design) and `overflow-x: clip` (not `hidden` — `clip` doesn't force the
+other axis to `auto` the way `hidden` would, and applying it here rather than to
+`html`/`body` avoids the sticky-header breakage a document-root-level fix caused earlier).
+
+**Motion** ([hero-shape.js](../src/scripts/hero-shape.js),
+[parallax.js](../src/scripts/parallax.js), gated behind `prefers-reduced-motion`): a
+pointer-follow tilt (desktop + fine-pointer only) and a scroll-scrubbed rotation both drive
+the same `rotation` transform, summed into one shared state object and a single `gsap.set()`
+call rather than two competing tweens. Scroll-parallax on the hero decor and the career photo
+collage is deliberately modest — enough to avoid the ring drifting into the Stats content
+below, and the career collage is never scaled/clipped for parallax "overscan," since it's a
+single pre-composed image where scaling crops directly into the composition.
+
+## Line pattern (diagonal lines on dark-blue blocks)
+
+One reusable canvas-based `LinePattern` component (not CSS/SVG) renders the diagonal-line
+pattern with an edge-to-middle alpha falloff, used via `[data-line-pattern]` on `.hero`,
+`.tech-domains`, `.who-we-are`, `.career`, `.site-footer`, and `.mobile-menu`, each with its
+own opacity value. Canvas was chosen specifically for the mouse-follow ripple (lines displace
+slightly toward the cursor, relax back over ~0.6–1s) — smoother, per-segment control than CSS
+transforms or SVG filters can drive at that granularity. Falls back to the static pattern
+(no rAF loop) under `prefers-reduced-motion` or on coarse/touch pointers.
+
+## Background glow
+
+`.bg-navy--glow::before` is a `radial-gradient()` reproducing Figma's blurred-circle
+lightening effect without an extra blurred DOM layer. Position varies per section via a
+`--glow-position` custom property set on each block (`.hero`, `.tech-domains`,
+`.who-we-are`, `.career`) — `.site-footer` intentionally has no glow, per Figma.
+
+## Type scale — `--text-scale`
+
+`tokens.css` defines `--text-scale` (`0.9` mobile, `0.85` from 900px); affected `font-size`
+declarations use `calc(Npx * var(--text-scale))` instead of a bare value, so it can be
+retuned from one place. Deliberately **not** applied to: the hero claim (cqw-based already),
+the "Slavíme 20 let" badge, header/mobile-menu nav links, button labels, the footer tagline,
+reference-card copy, or the contact form's own fields — match a neighboring element's
+exemption when adding new text to one of these components rather than assuming everything
+scales by default.
+
+## Other CSS notes
+
+- **Dark mode:** `body` needs an explicit `background` and `:root` needs `color-scheme:
+  light` — otherwise OS-level dark mode repaints elements with no explicit background, and
+  this design has no dark variant.
+- **`.mobile-menu`'s closed state needs `pointer-events: none`**, not just `opacity: 0` — the
+  `hidden` attribute alone doesn't disable interaction here, since `.mobile-menu`'s own
+  unconditional `display: flex` rule ties with the browser's default `[hidden]` rule at equal
+  specificity, and author CSS wins.
+- **GSAP tweens on interactive elements should always `clearProps` on complete** —
+  `gsap.from()` can leave a stray inline `transform` after `progress() === 1`, subtly
+  offsetting (but not disabling) hover/click targets.
+
+## Image pipeline
+
+Assets come from the Figma file via the Figma MCP (`download_assets`), never hand-prepared.
+Photos convert to `.webp` via `sharp`; icons/vectors export as optimized `.svg` via `svgo`
+(both dev dependencies, run via one-off scripts, not a persisted build pipeline). Figma's SVG
+export sets `preserveAspectRatio="none"` on some assets (found on all 10 client-logo SVGs),
+which stretches the graphic to fill its box instead of preserving proportions — strip that
+attribute on any future export that only sets `height` (not `width`) on its `<img>` tag.
+
+## Animation roadmap
+
+- GSAP is the default for scroll-triggered/entrance animation (ScrollTrigger as needed).
+- The line-pattern ripple is plain `requestAnimationFrame`, not GSAP — a continuous
+  pointer-driven simulation, not a discrete tween.
+- The "Slavíme 20 let" badge's entrance animation is a placeholder fade/scale, open to
+  revision.
+- A 3D element via Three.js is planned but not scoped — don't add the dependency until that
+  work is actually requested.
