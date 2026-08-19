@@ -113,49 +113,38 @@ body.nav-overflow .menu-toggle {
   }
 }
 
+/* Border + rounding are baked into the SVGs themselves (painted last, on top of the flag
+   artwork) instead of drawn in CSS — every CSS approach tried (real border, inset
+   box-shadow, outline + overflow:hidden wrapper, +translateZ(0) to force a compositing
+   layer) either blurred the art or still left corners uncipped on iOS Safari. Baking the
+   border into the vector art removes any dependency on the browser's own clip/composite
+   behavior. Hover swaps to a second SVG with an orange stroke instead of a CSS color
+   change — same stacked-icon-swap technique as .menu-toggle's open/close icons below. */
 .lang-toggle {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: grid;
+  place-items: center;
   flex-shrink: 0;
   width: 40px;
   height: 40px;
 }
 
-/* Inset outline instead of a real border — a real border shrinks the painted content
-   area within the fixed 24x18 box (box-sizing:border-box), forcing the SVG to downscale
-   and rendering noticeably blurrier than Figma's native 24x18 art. An inset box-shadow
-   avoids that but paints behind an <img>'s own replaced content, so it's fully hidden
-   under the opaque flag artwork. outline always paints on top of content (like a focus
-   ring) and, with a negative offset, sits inset without touching the image's box model.
-
-   The outline (and the rounded clip) live on this wrapper span, not the <img> itself —
-   Safari doesn't reliably clip a replaced element's own painted content to its
-   border-radius, so the flag's square corners poked out past the rounded outline on iOS.
-   overflow:hidden on a plain box is clipped consistently everywhere else, but iOS Safari
-   specifically has a known further bug where overflow:hidden + border-radius still fails
-   to clip a child <img> unless the box is promoted to its own compositing layer —
-   translateZ(0) forces that layer with no visual side effect here. */
 .lang-toggle__flag {
+  grid-area: 1 / 1;
   display: block;
   width: 24px;
   height: 18px;
-  border-radius: 3px;
-  overflow: hidden;
-  transform: translateZ(0);
-  outline: 1.5px solid var(--color-blue);
-  outline-offset: -1.5px;
-  transition: outline-color 0.2s var(--ease-out);
 }
 
-.lang-toggle__flag img {
+.lang-toggle__flag--hover {
+  display: none;
+}
+
+.lang-toggle:hover .lang-toggle__flag--default {
+  display: none;
+}
+
+.lang-toggle:hover .lang-toggle__flag--hover {
   display: block;
-  width: 100%;
-  height: 100%;
-}
-
-.lang-toggle:hover .lang-toggle__flag {
-  outline-color: var(--color-orange);
 }
 
 @media (min-width: 1280px) {
