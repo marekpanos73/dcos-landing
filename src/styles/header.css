@@ -17,7 +17,9 @@
   position: relative;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  /* Gap between the nav-group cluster and the hamburger — only visible on mobile, since
+     the nav-group's own margin-left:auto is what pushes everything right of the logo. */
+  gap: var(--space-2);
   height: var(--header-height-mobile);
   max-width: var(--container-max);
   margin-inline: auto;
@@ -48,22 +50,33 @@
   }
 }
 
+/* Always flex, on every breakpoint: below 1280px it lays out just the actions group
+   (the nav links and Kontakt button hide themselves via their own rules below), so the
+   language toggle still sits in a flex row with the correct gap next to the hamburger.
+   margin-left:auto pushes this whole cluster to the row's right edge, replacing the old
+   justify-content:space-between (which only worked with exactly 2 top-level items). */
 .site-header__nav-group {
+  display: flex;
+  align-items: center;
+  gap: var(--space-6);
+  margin-left: auto;
+}
+
+.site-nav {
   display: none;
 }
 
 @media (min-width: 1280px) {
-  .site-header__nav-group {
-    display: flex;
-    align-items: center;
-    gap: var(--space-6);
+  .site-nav {
+    display: block;
   }
 }
 
 /* Safety net: if header-nav.js measures an overflow (narrow "desktop" window, unusual
    zoom, a font metric wider than expected), it adds this to <body> to force the mobile
    menu even though the viewport is above the 1280px breakpoint. */
-body.nav-overflow .site-header__nav-group {
+body.nav-overflow .site-nav,
+body.nav-overflow .btn--header {
   display: none;
 }
 
@@ -79,6 +92,61 @@ body.nav-overflow .menu-toggle {
   padding: 0;
   font-weight: var(--fw-semibold);
   font-size: 18px;
+}
+
+/* Kontakt + language toggle, grouped so the 16px gap between them stays independent of
+   the 40px nav-to-actions gap above, and independent of the 8px gap to the hamburger
+   (site-header__inner's own gap) used on mobile once Kontakt is hidden. */
+.site-header__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.btn--header {
+  display: none;
+}
+
+@media (min-width: 1280px) {
+  .btn--header {
+    display: inline-flex;
+  }
+}
+
+.lang-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+}
+
+/* Inset outline instead of a real border — a real border shrinks the painted content
+   area within the fixed 24x18 box (box-sizing:border-box), forcing the SVG to downscale
+   and rendering noticeably blurrier than Figma's native 24x18 art. An inset box-shadow
+   avoids that but paints behind an <img>'s own replaced content, so it's fully hidden
+   under the opaque flag artwork. outline always paints on top of content (like a focus
+   ring) and, with a negative offset, sits inset without touching the image's box model. */
+.lang-toggle img {
+  display: block;
+  width: 24px;
+  height: 18px;
+  border-radius: 3px;
+  outline: 1.5px solid var(--color-blue);
+  outline-offset: -1.5px;
+  transition: outline-color 0.2s var(--ease-out);
+}
+
+.lang-toggle:hover img {
+  outline-color: var(--color-orange);
+}
+
+@media (min-width: 1280px) {
+  .lang-toggle {
+    width: 38px;
+    height: 38px;
+  }
 }
 
 .site-nav__list a {
