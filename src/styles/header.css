@@ -113,13 +113,10 @@ body.nav-overflow .menu-toggle {
   }
 }
 
-/* Border + rounding are baked into the SVGs themselves (painted last, on top of the flag
-   artwork) instead of drawn in CSS — every CSS approach tried (real border, inset
-   box-shadow, outline + overflow:hidden wrapper, +translateZ(0) to force a compositing
-   layer) either blurred the art or still left corners uncipped on iOS Safari. Baking the
-   border into the vector art removes any dependency on the browser's own clip/composite
-   behavior. Hover swaps to a second SVG with an orange stroke instead of a CSS color
-   change — same stacked-icon-swap technique as .menu-toggle's open/close icons below. */
+/* The flag SVGs carry their own rounded clip and border — this is just the click target,
+   sized to match the other header buttons, with the flag centered inside it. Hover swaps
+   to a second SVG (darker border) rather than a CSS color change — same stacked-icon-swap
+   technique as .menu-toggle's open/close icons below. */
 .lang-toggle {
   display: grid;
   place-items: center;
