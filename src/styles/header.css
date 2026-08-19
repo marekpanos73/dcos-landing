@@ -132,13 +132,17 @@ body.nav-overflow .menu-toggle {
    The outline (and the rounded clip) live on this wrapper span, not the <img> itself —
    Safari doesn't reliably clip a replaced element's own painted content to its
    border-radius, so the flag's square corners poked out past the rounded outline on iOS.
-   overflow:hidden on a plain box is clipped consistently everywhere. */
+   overflow:hidden on a plain box is clipped consistently everywhere else, but iOS Safari
+   specifically has a known further bug where overflow:hidden + border-radius still fails
+   to clip a child <img> unless the box is promoted to its own compositing layer —
+   translateZ(0) forces that layer with no visual side effect here. */
 .lang-toggle__flag {
   display: block;
   width: 24px;
   height: 18px;
   border-radius: 3px;
   overflow: hidden;
+  transform: translateZ(0);
   outline: 1.5px solid var(--color-blue);
   outline-offset: -1.5px;
   transition: outline-color 0.2s var(--ease-out);
